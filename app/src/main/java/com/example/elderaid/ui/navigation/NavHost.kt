@@ -1,13 +1,11 @@
-package com.example.elderaid.ui.navigatation
-
-
+package com.example.elderaid.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.elderaid.ui.screens.LoginScreen
-import com.elderaid431.ui.screens.SignupScreen
+import com.example.elderaid.ui.screens.SignupScreen
 
 @Composable
 fun AppNavHost(navController: NavHostController, startDestination: String) {

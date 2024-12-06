@@ -1,6 +1,5 @@
 package com.example.elderaid.ui.viewmodel
 
-
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
 
