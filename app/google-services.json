@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "939608612544",
+    "project_id": "elderaid-47c99",
+    "storage_bucket": "elderaid-47c99.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:939608612544:android:5b531965115e7e4f365725",
+        "android_client_info": {
+          "package_name": "com.example.elderaid"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-RjcZ43LchmdVQxDrIBhsuuNG4y2hrDY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
