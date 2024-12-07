@@ -21,29 +21,20 @@ fun LoginScreen(
     var errorMessage by remember { mutableStateOf("") }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        TextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        TextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+        TextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
+        TextField(value = password, onValueChange = { password = it }, label = { Text("Password") })
 
         Button(onClick = {
-            viewModel.login(email, password,
+            if (email.isBlank() || password.isBlank()) {
+                errorMessage = "Email and password cannot be empty"
+                return@Button
+            }
+            viewModel.login(
+                email, password,
                 onSuccess = { onLoginSuccess() },
                 onFailure = { errorMessage = it }
             )
@@ -52,13 +43,12 @@ fun LoginScreen(
         }
 
         if (errorMessage.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
             Text(text = errorMessage, color = MaterialTheme.colorScheme.error)
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
         TextButton(onClick = onSignupClick) {
             Text("Sign Up")
         }
     }
 }
+

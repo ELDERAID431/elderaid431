@@ -28,17 +28,17 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.6"
+        kotlinCompilerExtensionVersion = "1.4.8"
     }
 }
 
@@ -52,8 +52,8 @@ dependencies {
 
     // AndroidX Compose
     implementation("androidx.compose.ui:ui:1.5.1")
-    implementation("androidx.compose.material3:material3:1.1.1")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.5.1")
+    implementation("androidx.compose.material3:material3:1.3.1")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.7.5")
     implementation("androidx.navigation:navigation-compose:2.7.2")
 
     // AndroidX Core Libraries
@@ -67,7 +67,7 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 
     // Compose Testing
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.5.1")
-    debugImplementation("androidx.compose.ui:ui-tooling:1.5.1")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.5.1")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.5")
+    debugImplementation("androidx.compose.ui:ui-tooling:1.7.5")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.7.5")
 }

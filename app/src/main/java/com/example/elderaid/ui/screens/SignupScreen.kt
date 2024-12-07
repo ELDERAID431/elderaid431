@@ -13,41 +13,25 @@ import com.example.elderaid.ui.viewmodel.SignupViewModel
 
 @Composable
 fun SignupScreen(viewModel: SignupViewModel = viewModel(), onSignupSuccess: () -> Unit) {
-    var name by remember { mutableStateOf("") }
-    var surname by remember { mutableStateOf("") }
-    var age by remember { mutableStateOf("") }
-    var gender by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        TextField(value = name, onValueChange = { name = it }, label = { Text("Name") })
-        Spacer(modifier = Modifier.height(8.dp))
-        TextField(value = surname, onValueChange = { surname = it }, label = { Text("Surname") })
-        Spacer(modifier = Modifier.height(8.dp))
-        TextField(
-            value = age,
-            onValueChange = { age = it },
-            label = { Text("Age") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        TextField(value = gender, onValueChange = { gender = it }, label = { Text("Gender") })
-        Spacer(modifier = Modifier.height(8.dp))
         TextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
-        Spacer(modifier = Modifier.height(8.dp))
         TextField(value = password, onValueChange = { password = it }, label = { Text("Password") })
-        Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
-            viewModel.signup(name, surname, age, gender, email, password,
+            if (email.isBlank() || password.isBlank()) {
+                errorMessage = "All fields are required"
+                return@Button
+            }
+            viewModel.signup(
+                email, password,
                 onSuccess = { onSignupSuccess() },
                 onFailure = { errorMessage = it }
             )
@@ -56,7 +40,6 @@ fun SignupScreen(viewModel: SignupViewModel = viewModel(), onSignupSuccess: () -
         }
 
         if (errorMessage.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
             Text(text = errorMessage, color = MaterialTheme.colorScheme.error)
         }
     }
