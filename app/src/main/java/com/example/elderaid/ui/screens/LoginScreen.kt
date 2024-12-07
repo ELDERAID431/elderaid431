@@ -30,7 +30,7 @@ fun LoginScreen(
 
         Button(onClick = {
             if (email.isBlank() || password.isBlank()) {
-                errorMessage = "Email and password cannot be EMPTY"
+                errorMessage = "Email and password cannot be empty"
                 return@Button
             }
             viewModel.login(
