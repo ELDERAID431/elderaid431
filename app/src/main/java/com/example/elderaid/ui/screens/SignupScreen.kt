@@ -1,63 +1,56 @@
 package com.example.elderaid.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
+//noinspection UsingMaterialAndMaterial3Libraries
+import androidx.compose.material.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.elderaid.ui.viewmodel.SignupViewModel
+import androidx.navigation.NavController
+import com.example.elderaid.viewmodel.SignupViewModel
 
 @Composable
-fun SignupScreen(viewModel: SignupViewModel = viewModel(), onSignupSuccess: () -> Unit) {
-    var name by remember { mutableStateOf("") }
-    var surname by remember { mutableStateOf("") }
-    var age by remember { mutableStateOf("") }
-    var gender by remember { mutableStateOf("") }
+fun SignupScreen(navController: NavController, viewModel: SignupViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf("") }
+    var signupError by remember { mutableStateOf<String?>(null) }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        TextField(value = name, onValueChange = { name = it }, label = { Text("Name") })
-        Spacer(modifier = Modifier.height(8.dp))
-        TextField(value = surname, onValueChange = { surname = it }, label = { Text("Surname") })
-        Spacer(modifier = Modifier.height(8.dp))
         TextField(
-            value = age,
-            onValueChange = { age = it },
-            label = { Text("Age") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Email") },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)
         )
-        Spacer(modifier = Modifier.height(8.dp))
-        TextField(value = gender, onValueChange = { gender = it }, label = { Text("Gender") })
-        Spacer(modifier = Modifier.height(8.dp))
-        TextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
-        Spacer(modifier = Modifier.height(8.dp))
-        TextField(value = password, onValueChange = { password = it }, label = { Text("Password") })
         Spacer(modifier = Modifier.height(16.dp))
-
+        TextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Password") },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = {
-            viewModel.signup(name, surname, age, gender, email, password,
-                onSuccess = { onSignupSuccess() },
-                onFailure = { errorMessage = it }
-            )
+            viewModel.register(email, password) { success ->
+                if (success) {
+                    navController.navigate("login")
+                } else {
+                    signupError = "Registration failed!"
+                }
+            }
         }) {
-            Text("Sign Up")
+            Text("Register")
         }
-
-        if (errorMessage.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = errorMessage, color = MaterialTheme.colorScheme.error)
+        signupError?.let {
+            Text(it, color = MaterialTheme.colors.error)
         }
     }
 }

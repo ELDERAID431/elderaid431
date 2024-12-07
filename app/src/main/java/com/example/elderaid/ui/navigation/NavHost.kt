@@ -8,18 +8,9 @@ import com.example.elderaid.ui.screens.LoginScreen
 import com.example.elderaid.ui.screens.SignupScreen
 
 @Composable
-fun AppNavHost(navController: NavHostController, startDestination: String) {
+fun AppNavHost(navController: NavHostController, startDestination: String = "login") {
     NavHost(navController = navController, startDestination = startDestination) {
-        composable("login") {
-            LoginScreen(
-                onSignupClick = { navController.navigate("signup") },
-                onLoginSuccess = { /* Handle login success */ }
-            )
-        }
-        composable("signup") {
-            SignupScreen(
-                onSignupSuccess = { navController.navigate("login") }
-            )
-        }
+        composable("login") { LoginScreen(navController) }
+        composable("signup") { SignupScreen(navController) }
     }
 }

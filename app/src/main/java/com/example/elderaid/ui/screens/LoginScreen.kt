@@ -1,64 +1,62 @@
 package com.example.elderaid.ui.screens
+
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
+import androidx.compose.material.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.elderaid.ui.viewmodel.LoginViewModel
+import androidx.navigation.NavController
+import com.example.elderaid.viewmodel.LoginViewModel
 
 @Composable
-fun LoginScreen(
-    viewModel: LoginViewModel = viewModel(),
-    onSignupClick: () -> Unit,
-    onLoginSuccess: () -> Unit
-) {
+fun LoginScreen(navController: NavController, viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf("") }
+    var loginError by remember { mutableStateOf<String?>(null) }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         TextField(
             value = email,
             onValueChange = { email = it },
             label = { Text("Email") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         TextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("Password") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)
         )
         Spacer(modifier = Modifier.height(16.dp))
-
         Button(onClick = {
-            viewModel.login(email, password,
-                onSuccess = { onLoginSuccess() },
-                onFailure = { errorMessage = it }
-            )
+            viewModel.login(email, password) { success ->
+                if (success) {
+                    navController.navigate("signup")
+                } else {
+                    loginError = "Invalid credentials!"
+                }
+            }
         }) {
             Text("Login")
         }
-
-        if (errorMessage.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = errorMessage, color = MaterialTheme.colorScheme.error)
+        TextButton(onClick = { navController.navigate("signup") }) {
+            Text("Register")
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-        TextButton(onClick = onSignupClick) {
-            Text("Sign Up")
+        loginError?.let {
+            Text(it, color = MaterialTheme.colors.error)
         }
     }
 }
