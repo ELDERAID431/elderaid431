@@ -14,7 +14,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            ElderAidTheme { // Tema fonksiyonu
+            ElderAidTheme {
                 val navController = rememberNavController()
                 AppNavHost(navController = navController, startDestination = "login")
             }
