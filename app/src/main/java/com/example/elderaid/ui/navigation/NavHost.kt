@@ -20,7 +20,7 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
         composable("login") {
             LoginScreen(
                 onSignupClick = { navController.navigate("signup") },
-                onLoginSuccess = { /* Başarı durumu */ }
+                onLoginSuccess = { println("Login Success! Navigating to the next screen.") }
             )
         }
 

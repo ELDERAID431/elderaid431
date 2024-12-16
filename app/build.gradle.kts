@@ -70,4 +70,6 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.5")
     debugImplementation("androidx.compose.ui:ui-tooling:1.7.5")
     debugImplementation("androidx.compose.ui:ui-test-manifest:1.7.5")
+    implementation("androidx.compose.material:material-icons-extended:1.5.1")
+
 }
