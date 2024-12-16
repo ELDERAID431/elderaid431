@@ -1,4 +1,6 @@
 package com.example.elderaid.ui.screens
+
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -7,30 +9,31 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.elderaid.R
 
 @Composable
 fun GetStartedScreen(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFF5722)) // Arka plan rengi: Turuncu
+            .background(Color(0xFFFF5722)) // Turuncu arka plan
     ) {
-        // Üst kısımdaki eğimli gri alan
-        Box(
+        // Yamuk gri alan
+        Image(
+            painter = painterResource(id = R.drawable.rectangle_5),
+            contentDescription = "Background Shape",
+            contentScale = ContentScale.FillBounds,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
-                .background(Color(0xFFCCCCCC)) // Gri renk
-                .padding(bottom = 50.dp),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            // İsteğe bağlı olarak üst kısma bir görsel veya metin eklenebilir
-        }
+                .height(430.dp) // Görselin boyutunu ayarlayın
+        )
 
         Column(
             modifier = Modifier
@@ -39,35 +42,52 @@ fun GetStartedScreen(navController: NavController) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Logo
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Logo",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .size(width = 235.dp, height = 271.dp)
+                    .offset(y = -60.dp)
+            )
+
+            Spacer(modifier = Modifier.height(300.dp)) // Logo ile buton arası boşluk
+
             // Get Started Butonu
             Button(
                 onClick = {
-                    navController.navigate("login") // LoginScreen'e yönlendir
+                    navController.navigate("login")
                 },
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(24.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.White,
                     contentColor = Color.Black
                 ),
                 modifier = Modifier
-                    .fillMaxWidth(0.6f) // Buton genişliği
-                    .height(50.dp) // Buton yüksekliği
+                    .size(width = 287.dp, height = 77.dp)
             ) {
                 Text(
                     text = "Get Started",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Medium
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Alt kısımdaki açıklama metni
+            // Alt açıklama metni
             Text(
                 text = "A hand reaching out to the elderly with love...",
-                fontSize = 14.sp,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
                 color = Color.White,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .offset(y = 60.dp)
+                    .size(width = 314.dp, height = 42.dp)
             )
         }
     }
