@@ -4,35 +4,31 @@ import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
+data class User(
+    val fullName: String = "",
+    val email: String = "",
+    val phoneNumber: String = "",
+    val age: String = "",
+    val location: String = "",
+    val role: String = ""
+)
+
 class SignupViewModel : ViewModel() {
     private val firestore = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
 
     fun signup(
-        name: String,
-        surname: String,
-        gender: String,
-        city: String,
-        district: String,
-        email: String,
+        user: User,
         password: String,
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit
     ) {
-        FirebaseAuth.getInstance()
-            .createUserWithEmailAndPassword(email, password)
+        auth.createUserWithEmailAndPassword(user.email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    val userId = FirebaseAuth.getInstance().currentUser?.uid
-                    val user = mapOf(
-                        "name" to name,
-                        "surname" to surname,
-                        "gender" to gender,
-                        "city" to city,
-                        "district" to district,
-                        "email" to email
-                    )
+                    val userId = auth.currentUser?.uid
                     if (userId != null) {
-                        FirebaseFirestore.getInstance().collection("users").document(userId)
+                        firestore.collection("users").document(userId)
                             .set(user)
                             .addOnSuccessListener { onSuccess() }
                             .addOnFailureListener { onFailure(it.message ?: "Firestore error") }
@@ -42,5 +38,4 @@ class SignupViewModel : ViewModel() {
                 }
             }
     }
-
 }
