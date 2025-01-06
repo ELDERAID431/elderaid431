@@ -145,7 +145,28 @@ fun LoginScreen(
 
             // Log In Button
             Button(
-                onClick = onLoginSuccess,
+                onClick = {
+                    if (email.isNotEmpty() && password.isNotEmpty()) {
+                        FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    onLoginSuccess()
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Login failed: ${task.exception?.localizedMessage}",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            }
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Please enter both email and password",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                },
                 shape = RoundedCornerShape(144.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFD9D9D9),
