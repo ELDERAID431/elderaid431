@@ -4,21 +4,23 @@ import androidx.compose.runtime.*
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.elderaid.ui.screens.GetStartedScreen
-import com.example.elderaid.ui.screens.LoginScreen
-import com.example.elderaid.ui.screens.SignupScreen
-import com.example.elderaid.ui.screens.ElderMainScreen
+import com.example.elderaid.ui.screens.*
 import com.example.elderaid.ui.viewmodel.ElderMainViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun AppNavHost(navController: NavHostController, startDestination: String) {
+    val auth = FirebaseAuth.getInstance()
+    val elderMainViewModel: ElderMainViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+
     NavHost(navController = navController, startDestination = startDestination) {
+
         // Get Started Screen
         composable("getstarted") {
             GetStartedScreen(navController = navController)
         }
 
-        // Login Screen
+// Login Screen
         composable("login") {
             LoginScreen(
                 onSignupClick = { navController.navigate("signup") },
@@ -29,57 +31,87 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
         // Signup Screen
         composable("signup") {
             SignupScreen(
-                onSignupSuccess = { navController.navigate("login") }
+                onSignupSuccess = {
+                    navController.navigate("login") {
+                        popUpTo("signup") { inclusive = true }
+                    }
+                }
             )
         }
 
         // Elder Main Screen
         composable("elderMain") {
-            val elderMainViewModel: ElderMainViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
-            var previousRequests by remember { mutableStateOf(listOf<String>()) }
+            var previousRequests by remember { mutableStateOf(listOf<Map<String, String>>()) }
             var errorMessage by remember { mutableStateOf<String?>(null) }
+            var isLoading by remember { mutableStateOf(true) }
 
-            // Fetch previous help requests
             LaunchedEffect(Unit) {
-                elderMainViewModel.fetchPreviousRequests(
-                    elderUserId = "elder_user_id", // Replace with dynamic user ID
-                    onSuccess = { requests -> previousRequests = requests },
-                    onFailure = { error -> errorMessage = error }
-                )
+                val userId = auth.currentUser?.uid
+                if (userId != null) {
+                    elderMainViewModel.fetchPreviousRequests(
+                        elderUserId = userId,
+                        onSuccess = { requests ->
+                            previousRequests = requests // Assign the fetched requests
+                            isLoading = false
+                        },
+                        onFailure = { error ->
+                            errorMessage = error
+                            isLoading = false
+                        }
+                    )
+                } else {
+                    errorMessage = "User not logged in"
+                    isLoading = false
+                }
             }
 
             ElderMainScreen(
                 previousRequests = previousRequests,
+                isLoading = isLoading,
+                errorMessage = errorMessage,
                 onNewRequestClick = { navController.navigate("newHelpRequest") },
-                onViewApplicantsClick = { requestTitle ->
-                    println("View applicants for: $requestTitle")
+                onViewApplicantsClick = { requestId ->
+                    println("View applicants for request ID: $requestId")
                 },
                 onProfileClick = { navController.navigate("profile") },
                 onSOSClick = { navController.navigate("sos") }
             )
-
-            // Optional: Display error message
-            errorMessage?.let { error ->
-                println("Error loading requests: $error")
-            }
         }
 
-        // New Help Request Screen (placeholder)
+        // New Help Request Screen
         composable("newHelpRequest") {
-            println("Navigate to New Help Request Screen")
-            // Add screen implementation here
+            NewHelpRequestScreen(
+                onSubmitSuccess = {
+                    navController.popBackStack() // Return to ElderMainScreen
+                },
+                onCancel = {
+                    navController.popBackStack()
+                }
+            )
         }
 
-        // Profile Screen (placeholder)
+        // Profile Screen
         composable("profile") {
-            println("Navigate to Profile Screen")
-            // Add screen implementation here
+            ProfileScreen(
+                onLogout = {
+                    auth.signOut()
+                    navController.navigate("login") {
+                        popUpTo("elderMain") { inclusive = true } // Clear back stack
+                    }
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
         }
 
-        // SOS Screen (placeholder)
+        // SOS Screen
         composable("sos") {
-            println("Navigate to SOS Screen")
-            // Add screen implementation here
+            SOSScreen(
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
