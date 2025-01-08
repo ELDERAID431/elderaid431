@@ -76,6 +76,7 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
             var errorMessage by remember { mutableStateOf<String?>(null) }
             var isLoading by remember { mutableStateOf(true) }
 
+            // Fetch tasks from Firestore
             LaunchedEffect(Unit) {
                 FirebaseFirestore.getInstance().collection("help_requests")
                     .get()
@@ -84,7 +85,6 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
                             mapOf(
                                 "title" to (document.getString("title") ?: "No Title"),
                                 "description" to (document.getString("description") ?: "No Description"),
-                                "createdBy" to (document.getString("createdBy") ?: "Unknown"),
                                 "timestamp" to (document.getTimestamp("timestamp")?.toDate()?.toString() ?: "Unknown")
                             )
                         }
@@ -101,6 +101,7 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
                 isLoading = isLoading,
                 errorMessage = errorMessage,
                 onTaskClick = { task ->
+                    // Handle task click (navigate to detail screen or perform an action)
                     println("Clicked on task: $task")
                 }
             )

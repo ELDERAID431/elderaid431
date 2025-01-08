@@ -1,33 +1,36 @@
-package com.example.elderaid.ui.viewmodel
+package com.example.elderaid.ui.screens
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 
 class VolunteerViewModel : ViewModel() {
-    private val firestore = FirebaseFirestore.getInstance()
+    val tasks = mutableStateOf<List<Map<String, String>>>(emptyList())
+    val isLoading = mutableStateOf(true)
+    val errorMessage = mutableStateOf<String?>(null)
 
-    fun fetchHelpRequests(
-        onSuccess: (List<Map<String, String>>) -> Unit,
-        onFailure: (String) -> Unit
-    ) {
-        firestore.collection("help_requests")
+    init {
+        fetchTasks()
+    }
+
+    private fun fetchTasks() {
+        isLoading.value = true
+        FirebaseFirestore.getInstance().collection("help_requests")
             .get()
             .addOnSuccessListener { documents ->
-                val requests = documents.map { document ->
-                    val timestamp = document.getTimestamp("timestamp")
+                val taskList = documents.map { document ->
                     mapOf(
-                        "id" to document.id,
                         "title" to (document.getString("title") ?: "No Title"),
                         "description" to (document.getString("description") ?: "No Description"),
-                        "createdBy" to (document.getString("createdBy") ?: "Unknown"),
-                        "timestamp" to (timestamp?.toDate()?.toString() ?: "Unknown")
+                        "timestamp" to (document.getString("timestamp") ?: "Unknown")
                     )
                 }
-                onSuccess(requests)
+                tasks.value = taskList
+                isLoading.value = false
             }
             .addOnFailureListener { exception ->
-                onFailure(exception.localizedMessage ?: "Failed to fetch requests")
+                errorMessage.value = exception.localizedMessage ?: "Error fetching tasks"
+                isLoading.value = false
             }
     }
 }
