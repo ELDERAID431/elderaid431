@@ -5,13 +5,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.elderaid.ui.screens.*
-import com.example.elderaid.ui.viewmodel.ElderMainViewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun AppNavHost(navController: NavHostController, startDestination: String) {
     val auth = FirebaseAuth.getInstance()
-    val elderMainViewModel: ElderMainViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 
     NavHost(navController = navController, startDestination = startDestination) {
 
@@ -20,11 +19,28 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
             GetStartedScreen(navController = navController)
         }
 
-// Login Screen
+        // Login Screen
         composable("login") {
             LoginScreen(
                 onSignupClick = { navController.navigate("signup") },
-                onLoginSuccess = { navController.navigate("elderMain") }
+                onLoginSuccess = {
+                    val userId = auth.currentUser?.uid
+                    if (userId != null) {
+                        FirebaseFirestore.getInstance().collection("users").document(userId)
+                            .get()
+                            .addOnSuccessListener { document ->
+                                val role = document.getString("role")
+                                if (role == "Elder") {
+                                    navController.navigate("elderMain")
+                                } else if (role == "Volunteer") {
+                                    navController.navigate("volunteerMain")
+                                }
+                            }
+                            .addOnFailureListener {
+                                println("Error fetching user role: ${it.localizedMessage}")
+                            }
+                    }
+                }
             )
         }
 
@@ -41,34 +57,10 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
 
         // Elder Main Screen
         composable("elderMain") {
-            var previousRequests by remember { mutableStateOf(listOf<Map<String, String>>()) }
-            var errorMessage by remember { mutableStateOf<String?>(null) }
-            var isLoading by remember { mutableStateOf(true) }
-
-            LaunchedEffect(Unit) {
-                val userId = auth.currentUser?.uid
-                if (userId != null) {
-                    elderMainViewModel.fetchPreviousRequests(
-                        elderUserId = userId,
-                        onSuccess = { requests ->
-                            previousRequests = requests // Assign the fetched requests
-                            isLoading = false
-                        },
-                        onFailure = { error ->
-                            errorMessage = error
-                            isLoading = false
-                        }
-                    )
-                } else {
-                    errorMessage = "User not logged in"
-                    isLoading = false
-                }
-            }
-
             ElderMainScreen(
-                previousRequests = previousRequests,
-                isLoading = isLoading,
-                errorMessage = errorMessage,
+                previousRequests = listOf(),
+                isLoading = false,
+                errorMessage = null,
                 onNewRequestClick = { navController.navigate("newHelpRequest") },
                 onViewApplicantsClick = { requestId ->
                     println("View applicants for request ID: $requestId")
@@ -78,11 +70,47 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
             )
         }
 
+        // Volunteer Main Screen
+        composable("volunteerMain") {
+            var tasks by remember { mutableStateOf(listOf<Map<String, String>>()) }
+            var errorMessage by remember { mutableStateOf<String?>(null) }
+            var isLoading by remember { mutableStateOf(true) }
+
+            LaunchedEffect(Unit) {
+                FirebaseFirestore.getInstance().collection("help_requests")
+                    .get()
+                    .addOnSuccessListener { documents ->
+                        tasks = documents.map { document ->
+                            mapOf(
+                                "title" to (document.getString("title") ?: "No Title"),
+                                "description" to (document.getString("description") ?: "No Description"),
+                                "createdBy" to (document.getString("createdBy") ?: "Unknown"),
+                                "timestamp" to (document.getTimestamp("timestamp")?.toDate()?.toString() ?: "Unknown")
+                            )
+                        }
+                        isLoading = false
+                    }
+                    .addOnFailureListener { exception ->
+                        errorMessage = exception.localizedMessage ?: "Failed to load tasks"
+                        isLoading = false
+                    }
+            }
+
+            VolunteerMainScreen(
+                tasks = tasks,
+                isLoading = isLoading,
+                errorMessage = errorMessage,
+                onTaskClick = { task ->
+                    println("Clicked on task: $task")
+                }
+            )
+        }
+
         // New Help Request Screen
         composable("newHelpRequest") {
             NewHelpRequestScreen(
                 onSubmitSuccess = {
-                    navController.popBackStack() // Return to ElderMainScreen
+                    navController.popBackStack()
                 },
                 onCancel = {
                     navController.popBackStack()
@@ -96,7 +124,7 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
                 onLogout = {
                     auth.signOut()
                     navController.navigate("login") {
-                        popUpTo("elderMain") { inclusive = true } // Clear back stack
+                        popUpTo("elderMain") { inclusive = true }
                     }
                 },
                 onBack = {
