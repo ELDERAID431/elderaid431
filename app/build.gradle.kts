@@ -46,9 +46,11 @@ dependencies {
     // Firebase BOM
     implementation(platform("com.google.firebase:firebase-bom:32.2.3"))
 
-    // Firebase Authentication & Firestore
+    // Firebase dependencies (without version numbers)
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx") // Firebase Storage
+
 
     // AndroidX Compose
     implementation("androidx.compose.ui:ui:1.5.1")
@@ -61,6 +63,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
     implementation("androidx.activity:activity-compose:1.7.2")
 
+
     // Testing
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
@@ -71,5 +74,9 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling:1.7.5")
     debugImplementation("androidx.compose.ui:ui-test-manifest:1.7.5")
     implementation("androidx.compose.material:material-icons-extended:1.5.1")
+
+    //image
+    implementation("io.coil-kt:coil-compose:2.3.0")
+
 
 }
