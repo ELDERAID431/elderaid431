@@ -44,8 +44,13 @@ android {
 
 dependencies {
     // Firebase BOM
-    implementation(platform("com.google.firebase:firebase-bom:32.2.3"))
 
+    implementation(platform("com.google.firebase:firebase-bom:32.2.3"))
+    // OkHttp for HTTP requests
+    implementation ("com.squareup.okhttp3:okhttp:4.11.0")
+
+    // JSON parsing library
+    implementation ("org.json:json:20211205")
     // Firebase dependencies (without version numbers)
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
