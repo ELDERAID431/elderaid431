@@ -26,14 +26,14 @@ fun GetStartedScreen(navController: NavController) {
             .background(Color(0xFFFF5722)) // Turuncu arka plan
     ) {
         // Yamuk gri alan
-        Image(
+        /*Image(
             painter = painterResource(id = R.drawable.rectangle_5),
             contentDescription = "Background Shape",
             contentScale = ContentScale.FillBounds,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(430.dp) // Görselin boyutunu ayarlayın
-        )
+        )*/
 
         Column(
             modifier = Modifier
