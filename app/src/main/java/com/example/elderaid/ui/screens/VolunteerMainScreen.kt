@@ -25,6 +25,7 @@ fun VolunteerMainScreen(
 
     var userName by remember { mutableStateOf<String?>(null) }
     var isUserLoading by remember { mutableStateOf(true) }
+    var selectedTask by remember { mutableStateOf<Map<String, String>?>(null) }
 
     // Kullanıcı adını Firebase'den çekme
     LaunchedEffect(Unit) {
@@ -76,9 +77,14 @@ fun VolunteerMainScreen(
         } else {
             LazyColumn {
                 items(tasks) { task ->
-                    TaskCard(task, onTaskClick)
+                    TaskCard(task, onTaskClick = { selectedTask = it })
                 }
             }
+        }
+
+        // Görev Detayı Popup
+        selectedTask?.let { task ->
+            TaskDetailDialog(task = task, onDismiss = { selectedTask = null })
         }
     }
 }
@@ -98,3 +104,25 @@ fun TaskCard(task: Map<String, String>, onTaskClick: (Map<String, String>) -> Un
         }
     }
 }
+
+@Composable
+fun TaskDetailDialog(task: Map<String, String>, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text("Close")
+            }
+        },
+        title = {
+            Text(text = task["title"] ?: "No Title")
+        },
+        text = {
+            Column {
+                Text("Description: ${task["description"] ?: "No Description"}")
+                Text("Timestamp: ${task["timestamp"] ?: "Unknown Time"}")
+            }
+        }
+    )
+}
+
