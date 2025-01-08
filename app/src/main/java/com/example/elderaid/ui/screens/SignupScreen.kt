@@ -24,7 +24,14 @@ import androidx.compose.ui.text.font.FontWeight
 import com.example.elderaid.R
 import com.example.elderaid.ui.viewmodel.SignupViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import android.content.Context
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import coil.compose.rememberAsyncImagePainter
+import kotlinx.coroutines.launch
 import com.example.elderaid.ui.viewmodel.User
+
 
 @Composable
 fun SignupScreen(viewModel: SignupViewModel = viewModel(), onSignupSuccess: () -> Unit) {
@@ -36,8 +43,25 @@ fun SignupScreen(viewModel: SignupViewModel = viewModel(), onSignupSuccess: () -
     var password by remember { mutableStateOf("") }
     var selectedRole by remember { mutableStateOf("Volunteer") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var photoUrl by remember { mutableStateOf<String?>(null) }
+    var successMessage by remember { mutableStateOf<String?>(null) }
 
+    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
+
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            coroutineScope.launch {
+                val newPhotoUrl = uploadImageToCloudinary(it, context)
+                if (newPhotoUrl != null) {
+                    photoUrl = newPhotoUrl
+                    successMessage = "Profile picture uploaded successfully"
+                } else {
+                    errorMessage = "Failed to upload image"
+                }
+            }
+        }
+    }
 
     Scaffold { paddingValues ->
         Box(
@@ -53,39 +77,24 @@ fun SignupScreen(viewModel: SignupViewModel = viewModel(), onSignupSuccess: () -
                     .padding(12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Header Images
-                Row(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .align(Alignment.Start),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.elder),
-                        contentDescription = "Elder",
-                        modifier = Modifier.height(30.dp)
-                    )
-                    Image(
-                        painter = painterResource(id = R.drawable.aid),
-                        contentDescription = "Aid",
-                        modifier = Modifier.height(30.dp)
-                    )
-                }
-
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Profile Picture
                 Box(contentAlignment = Alignment.BottomEnd, modifier = Modifier.size(80.dp)) {
                     Image(
-                        painter = painterResource(id = R.drawable.profile),
-                        contentDescription = "Profile",
+                        painter = if (photoUrl != null) {
+                            rememberAsyncImagePainter(photoUrl)
+                        } else {
+                            painterResource(id = R.drawable.profile)
+                        },
+                        contentDescription = "Profile Picture",
                         modifier = Modifier
                             .size(80.dp)
                             .clip(CircleShape)
                             .background(Color.LightGray)
                     )
                     IconButton(
-                        onClick = { /* Edit Action */ },
+                        onClick = { launcher.launch("image/*") },
                         modifier = Modifier
                             .size(24.dp)
                             .background(Color.White, CircleShape)
@@ -124,13 +133,18 @@ fun SignupScreen(viewModel: SignupViewModel = viewModel(), onSignupSuccess: () -
                 // Sign Up Button
                 Button(
                     onClick = {
+                        if (photoUrl.isNullOrEmpty()) {
+                            errorMessage = "Please upload a profile picture"
+                            return@Button
+                        }
                         val user = User(
                             fullName = fullName,
                             email = email,
                             phoneNumber = phoneNumber,
                             age = age,
                             location = location,
-                            role = selectedRole
+                            role = selectedRole,
+                            photoUrl = photoUrl ?: ""
                         )
                         viewModel.signup(user, password,
                             onSuccess = { onSignupSuccess() },
@@ -143,10 +157,22 @@ fun SignupScreen(viewModel: SignupViewModel = viewModel(), onSignupSuccess: () -
                 ) {
                     Text("Sign Up", fontSize = 14.sp)
                 }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                successMessage?.let {
+                    Text(it, color = Color.Green)
+                }
+
+                errorMessage?.let {
+                    Text(it, color = Color.Red)
+                }
             }
         }
     }
 }
+
+
 
 
 @Composable

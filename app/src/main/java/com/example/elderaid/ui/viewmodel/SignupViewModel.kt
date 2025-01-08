@@ -11,7 +11,8 @@ data class User(
     val phoneNumber: String = "",
     val age: String = "",
     val location: String = "",
-    val role: String = ""
+    val role: String = "" ,
+    val photoUrl: String= ""
 )
 
 class SignupViewModel : ViewModel() {
