@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import androidx.compose.ui.Alignment
 import com.example.elderaid.ui.components.OfferCard
@@ -24,13 +25,22 @@ fun VolunteerOffersScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var selectedOffer by remember { mutableStateOf<Map<String, Any>?>(null) } // To display details dialog
 
+    // Fetch offers where volunteers have accepted
     LaunchedEffect(Unit) {
         val userId = auth.currentUser?.uid ?: return@LaunchedEffect
         firestore.collection("help_requests")
             .whereEqualTo("creatorId", userId)
             .get()
             .addOnSuccessListener { querySnapshot ->
-                offers = querySnapshot.documents.mapNotNull { it.data }
+                // Filter help_requests that have `acceptedVolunteers` and include their details
+                offers = querySnapshot.documents.mapNotNull { document ->
+                    val data = document.data
+                    val acceptedVolunteers = data?.get("acceptedVolunteers") as? List<String>
+                    if (!acceptedVolunteers.isNullOrEmpty()) {
+                        data["id"] = document.id // Add document ID for easier handling
+                        data
+                    } else null
+                }
                 isLoading = false
             }
             .addOnFailureListener { exception ->
@@ -47,14 +57,18 @@ fun VolunteerOffersScreen(
         } else {
             LazyColumn {
                 items(offers) { offer ->
-                    OfferCard(
-                        offer = offer,
-                        onAccept = { /* Add Accept logic */ },
-                        onReject = { /* Add Reject logic */ },
-                        onDetails = {
-                            selectedOffer = offer // Show offer details in a dialog
-                        }
-                    )
+                    val offerId = offer["id"] as? String ?: return@items
+                    val acceptedVolunteers = offer["acceptedVolunteers"] as? List<String> ?: emptyList()
+
+                    // Display the list of accepted volunteers
+                    acceptedVolunteers.forEach { volunteerId ->
+                        OfferCard(
+                            offer = offer,
+                            onAccept = { acceptVolunteerOffer(firestore, offerId, volunteerId) },
+                            onReject = { rejectVolunteerOffer(firestore, offerId, volunteerId) },
+                            onDetails = { selectedOffer = offer }
+                        )
+                    }
                 }
             }
         }
@@ -102,4 +116,34 @@ fun OfferDetailsDialog(
             }
         }
     )
+}
+
+fun acceptVolunteerOffer(
+    firestore: FirebaseFirestore,
+    requestId: String,
+    volunteerId: String
+) {
+    val requestRef = firestore.collection("help_requests").document(requestId)
+    requestRef.update("finalAcceptedVolunteer", volunteerId)
+        .addOnSuccessListener {
+            println("Volunteer accepted successfully.")
+        }
+        .addOnFailureListener {
+            println("Error accepting volunteer: ${it.localizedMessage}")
+        }
+}
+
+fun rejectVolunteerOffer(
+    firestore: FirebaseFirestore,
+    requestId: String,
+    volunteerId: String
+) {
+    val requestRef = firestore.collection("help_requests").document(requestId)
+    requestRef.update("acceptedVolunteers", FieldValue.arrayRemove(volunteerId))
+        .addOnSuccessListener {
+            println("Volunteer rejected successfully.")
+        }
+        .addOnFailureListener {
+            println("Error rejecting volunteer: ${it.localizedMessage}")
+        }
 }
