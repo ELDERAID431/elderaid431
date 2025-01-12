@@ -93,7 +93,7 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
                 },
                 onProfileClick = { navController.navigate("profile") },
                 onSOSClick = { navController.navigate("sos") },
-                onVolunteerOffersClick = { navController.navigate("volunteerOffers") } // Correctly added navigation
+                onVolunteerOffersClick = { navController.navigate("volunteerOffers") }
             )
         }
 

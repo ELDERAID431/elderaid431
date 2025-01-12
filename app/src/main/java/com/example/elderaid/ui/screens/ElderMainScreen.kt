@@ -1,5 +1,6 @@
 package com.example.elderaid.ui.screens
 
+import HelpRequestCard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -35,7 +36,6 @@ fun ElderMainScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Header Section
             Text(
                 text = "My Help Requests",
                 style = MaterialTheme.typography.headlineMedium,
@@ -43,29 +43,36 @@ fun ElderMainScreen(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Volunteer Offers Button
-            Button(
-                onClick = onVolunteerOffersClick,
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
-            ) {
-                Text("Volunteer Offers")
-            }
-
-            // Loading/Error/Help Requests
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-            } else if (errorMessage != null) {
-                Text(text = "Error: $errorMessage", color = MaterialTheme.colorScheme.error)
-            } else if (previousRequests.isEmpty()) {
-                Text(text = "No requests yet.", color = Color.Gray)
-            } else {
-                LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(previousRequests) { request ->
-                        HelpRequestCard(
-                            requestTitle = request["title"] as? String ?: "No Title",
-                            onClick = { onViewApplicantsClick(request["id"] as? String ?: "") }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            errorMessage?.let {
+                Text(
+                    text = "Error: $it",
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
+
+            if (!isLoading && errorMessage == null) {
+                if (previousRequests.isEmpty()) {
+                    Text(
+                        text = "No requests yet.",
+                        color = Color.Gray,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                } else {
+                    LazyColumn(modifier = Modifier.weight(1f)) {
+                        items(previousRequests) { request ->
+                            HelpRequestCard(
+                                requestTitle = request["title"] as? String ?: "No Title",
+                                onClick = {
+                                    onViewApplicantsClick(request["id"] as? String ?: "")
+                                }
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
                     }
                 }
             }
@@ -74,9 +81,22 @@ fun ElderMainScreen(
 
             Button(
                 onClick = onNewRequestClick,
-                modifier = Modifier.fillMaxWidth().height(50.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
             ) {
                 Text("Create New Help Request")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = onVolunteerOffersClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) {
+                Text("Volunteer Offers")
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -87,33 +107,21 @@ fun ElderMainScreen(
             ) {
                 Button(
                     onClick = onProfileClick,
-                    modifier = Modifier.weight(1f).padding(end = 8.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp)
                 ) {
                     Text("Profile")
                 }
                 Button(
                     onClick = onSOSClick,
-                    modifier = Modifier.weight(1f).padding(start = 8.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 8.dp)
                 ) {
                     Text("SOS")
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun HelpRequestCard(requestTitle: String, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(4.dp).clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(text = requestTitle, fontSize = 16.sp, color = Color.Black)
         }
     }
 }
