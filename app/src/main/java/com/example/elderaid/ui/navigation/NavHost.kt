@@ -39,9 +39,7 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
                                     "Volunteer" -> navController.navigate("volunteerMain") {
                                         popUpTo("login") { inclusive = true }
                                     }
-                                    else -> {
-                                        println("Unknown role: $role")
-                                    }
+                                    else -> println("Unknown role: $role")
                                 }
                             }
                             .addOnFailureListener {
@@ -66,7 +64,7 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
         // Elder Main Screen
         composable("elderMain") {
             val viewModel: ElderMainViewModel = viewModel()
-            var previousRequests by remember { mutableStateOf(listOf<Map<String, String>>()) }
+            var previousRequests by remember { mutableStateOf(listOf<Map<String, Any>>()) } // Updated type
             var isLoading by remember { mutableStateOf(false) }
             var errorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -100,34 +98,7 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
 
         // Volunteer Main Screen
         composable("volunteerMain") {
-            var tasks by remember { mutableStateOf(listOf<Map<String, String>>()) }
-            var errorMessage by remember { mutableStateOf<String?>(null) }
-            var isLoading by remember { mutableStateOf(true) }
-
-            LaunchedEffect(Unit) {
-                FirebaseFirestore.getInstance().collection("help_requests")
-                    .get()
-                    .addOnSuccessListener { documents ->
-                        tasks = documents.map { document ->
-                            mapOf(
-                                "id" to document.id,
-                                "title" to (document.getString("title") ?: "No Title"),
-                                "description" to (document.getString("description") ?: "No Description"),
-                                "timestamp" to (document.getTimestamp("timestamp")?.toDate()?.toString() ?: "Unknown")
-                            )
-                        }
-                        isLoading = false
-                    }
-                    .addOnFailureListener { exception ->
-                        errorMessage = exception.localizedMessage ?: "Failed to load tasks"
-                        isLoading = false
-                    }
-            }
-
             VolunteerMainScreen(
-                tasks = tasks,
-                isLoading = isLoading,
-                errorMessage = errorMessage,
                 onTaskClick = { task ->
                     println("Clicked on task: $task")
                 }

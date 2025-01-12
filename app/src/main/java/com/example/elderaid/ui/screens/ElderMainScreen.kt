@@ -6,9 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -17,7 +14,7 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun ElderMainScreen(
-    previousRequests: List<Map<String, String>>,
+    previousRequests: List<Map<String, Any>>,
     isLoading: Boolean,
     errorMessage: String?,
     onNewRequestClick: () -> Unit,
@@ -32,7 +29,6 @@ fun ElderMainScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Header Section
             Text(
                 text = "My Help Requests",
                 style = MaterialTheme.typography.headlineMedium,
@@ -40,12 +36,10 @@ fun ElderMainScreen(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Loading State
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             }
 
-            // Error State
             errorMessage?.let {
                 Text(
                     text = "Error: $it",
@@ -54,7 +48,6 @@ fun ElderMainScreen(
                 )
             }
 
-            // Help Requests List
             if (!isLoading && errorMessage == null) {
                 if (previousRequests.isEmpty()) {
                     Text(
@@ -66,8 +59,8 @@ fun ElderMainScreen(
                     LazyColumn(modifier = Modifier.weight(1f)) {
                         items(previousRequests) { request ->
                             HelpRequestCard(
-                                requestTitle = request["title"] ?: "No Title",
-                                onClick = { onViewApplicantsClick(request["id"] ?: "") }
+                                requestTitle = request["title"] as? String ?: "No Title",
+                                onClick = { onViewApplicantsClick(request["id"] as? String ?: "") }
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                         }
@@ -77,7 +70,6 @@ fun ElderMainScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // New Request Button
             Button(
                 onClick = onNewRequestClick,
                 modifier = Modifier
@@ -89,7 +81,6 @@ fun ElderMainScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Navigation Buttons
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()

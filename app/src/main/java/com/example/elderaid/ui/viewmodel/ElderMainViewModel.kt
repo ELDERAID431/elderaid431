@@ -6,10 +6,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 class ElderMainViewModel : ViewModel() {
     private val firestore = FirebaseFirestore.getInstance()
 
-    // Fetch previous help requests created by the user
     fun fetchPreviousRequests(
         elderUserId: String,
-        onSuccess: (List<Map<String, String>>) -> Unit,
+        onSuccess: (List<Map<String, Any>>) -> Unit,
         onFailure: (String) -> Unit
     ) {
         if (elderUserId.isBlank()) {
@@ -18,17 +17,23 @@ class ElderMainViewModel : ViewModel() {
         }
 
         firestore.collection("help_requests")
-            .whereEqualTo("creatorId", elderUserId) // Ensure this matches the Firestore field
+            .whereEqualTo("creatorId", elderUserId)
             .get()
             .addOnSuccessListener { documents ->
-                val requests = documents.map { document ->
-                    mapOf(
-                        "id" to document.id,
-                        "title" to (document.getString("title") ?: "No Title"),
-                        "description" to (document.getString("description") ?: "No Description"),
-                        "location" to (document.getString("location") ?: "No Location"),
-                        "timestamp" to (document.getLong("timestamp")?.toString() ?: "Unknown")
-                    )
+                val requests = documents.mapNotNull { document ->
+                    try {
+                        val data = document.data ?: return@mapNotNull null
+                        data["id"] = document.id
+                        val timestamp = data["timestamp"]
+                        data["timestamp"] = when (timestamp) {
+                            is com.google.firebase.Timestamp -> timestamp.toDate().time
+                            is Long -> timestamp
+                            else -> null // Handle unexpected types
+                        }
+                        data
+                    } catch (e: Exception) {
+                        null // Skip invalid data
+                    }
                 }
                 onSuccess(requests)
             }

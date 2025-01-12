@@ -18,7 +18,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.*
-
 @Composable
 fun NewHelpRequestScreen(
     onSubmitSuccess: () -> Unit,
@@ -28,7 +27,6 @@ fun NewHelpRequestScreen(
     val auth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
 
-    // State variables
     var title by remember { mutableStateOf("") }
     var date by remember { mutableStateOf<Date?>(null) }
     var startTime by remember { mutableStateOf<Date?>(null) }
@@ -67,7 +65,7 @@ fun NewHelpRequestScreen(
             },
             calendar.get(Calendar.HOUR_OF_DAY),
             calendar.get(Calendar.MINUTE),
-            false // 12-hour format
+            false
         ).show()
     }
 
@@ -180,7 +178,9 @@ fun NewHelpRequestScreen(
                         "location" to location,
                         "description" to description,
                         "category" to category,
-                        "creatorId" to userId
+                        "creatorId" to userId,
+                        "creatorRole" to "elder",
+                        "timestamp" to com.google.firebase.Timestamp.now()
                     )
                     isLoading = true
                     firestore.collection("help_requests")

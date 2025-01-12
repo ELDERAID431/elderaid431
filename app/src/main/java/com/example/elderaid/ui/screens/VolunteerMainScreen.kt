@@ -12,33 +12,31 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.auth.FirebaseAuth
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun VolunteerMainScreen(
-    tasks: List<Map<String, String>>,
-    isLoading: Boolean,
-    errorMessage: String?,
-    onTaskClick: (Map<String, String>) -> Unit
+    onTaskClick: (Map<String, Any>) -> Unit
 ) {
     val auth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
 
+    var tasks by remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
     var userName by remember { mutableStateOf<String?>(null) }
     var isUserLoading by remember { mutableStateOf(true) }
-    var selectedTask by remember { mutableStateOf<Map<String, String>?>(null) }
 
-    // Kullanıcı adını Firebase'den çekme
+    // Fetch user name from Firebase
     LaunchedEffect(Unit) {
         val userId = auth.currentUser?.uid
         if (userId != null) {
             firestore.collection("users").document(userId)
                 .get()
                 .addOnSuccessListener { document ->
-                    if (document.exists()) {
-                        userName = document.getString("fullName") ?: "User"
-                    } else {
-                        userName = "User"
-                    }
+                    userName = document.getString("fullName") ?: "User"
                     isUserLoading = false
                 }
                 .addOnFailureListener {
@@ -51,7 +49,21 @@ fun VolunteerMainScreen(
         }
     }
 
-    // UI Gösterimi
+    // Fetch tasks from Firebase
+    LaunchedEffect(Unit) {
+        firestore.collection("help_requests")
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                tasks = querySnapshot.documents.map { it.data ?: emptyMap() }
+                isLoading = false
+            }
+            .addOnFailureListener { exception ->
+                errorMessage = "Failed to load tasks: ${exception.localizedMessage}"
+                isLoading = false
+            }
+    }
+
+    // UI
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -61,7 +73,6 @@ fun VolunteerMainScreen(
         if (isUserLoading) {
             CircularProgressIndicator()
         } else {
-            // Kullanıcı Adını Göster
             Text(
                 text = "Hello, ${userName ?: "User"}!",
                 style = MaterialTheme.typography.headlineMedium,
@@ -69,7 +80,6 @@ fun VolunteerMainScreen(
             )
         }
 
-        // Görev Listesi
         if (isLoading) {
             CircularProgressIndicator()
         } else if (!errorMessage.isNullOrEmpty()) {
@@ -77,20 +87,15 @@ fun VolunteerMainScreen(
         } else {
             LazyColumn {
                 items(tasks) { task ->
-                    TaskCard(task, onTaskClick = { selectedTask = it })
+                    TaskCard(task, onTaskClick)
                 }
             }
-        }
-
-        // Görev Detayı Popup
-        selectedTask?.let { task ->
-            TaskDetailDialog(task = task, onDismiss = { selectedTask = null })
         }
     }
 }
 
 @Composable
-fun TaskCard(task: Map<String, String>, onTaskClick: (Map<String, String>) -> Unit) {
+fun TaskCard(task: Map<String, Any>, onTaskClick: (Map<String, Any>) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -98,31 +103,16 @@ fun TaskCard(task: Map<String, String>, onTaskClick: (Map<String, String>) -> Un
             .clickable { onTaskClick(task) }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = task["title"] ?: "No Title", style = MaterialTheme.typography.bodyLarge)
-            Text(text = task["description"] ?: "No Description", style = MaterialTheme.typography.bodySmall)
-            Text(text = task["timestamp"] ?: "Unknown Time", style = MaterialTheme.typography.bodySmall)
+            Text(text = task["title"] as? String ?: "No Title", style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = task["description"] as? String ?: "No Description",
+                style = MaterialTheme.typography.bodySmall
+            )
+            val date = task["date"] as? Long
+            if (date != null) {
+                val formattedDate = SimpleDateFormat("EEEE, dd MMM yyyy", Locale.getDefault()).format(Date(date))
+                Text(text = "Date: $formattedDate", style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }
-
-@Composable
-fun TaskDetailDialog(task: Map<String, String>, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            Button(onClick = onDismiss) {
-                Text("Close")
-            }
-        },
-        title = {
-            Text(text = task["title"] ?: "No Title")
-        },
-        text = {
-            Column {
-                Text("Description: ${task["description"] ?: "No Description"}")
-                Text("Timestamp: ${task["timestamp"] ?: "Unknown Time"}")
-            }
-        }
-    )
-}
-
