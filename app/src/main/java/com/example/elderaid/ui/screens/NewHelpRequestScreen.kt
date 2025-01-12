@@ -194,5 +194,16 @@ fun NewHelpRequestScreen(
             Spacer(modifier = Modifier.height(8.dp))
             Text(it, color = MaterialTheme.colorScheme.error)
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Geri Dön Butonu
+        Button(
+            onClick = { onCancel() },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+        ) {
+            Text("Back to Main Screen")
+        }
     }
 }

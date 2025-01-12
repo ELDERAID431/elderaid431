@@ -5,7 +5,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,6 +32,7 @@ fun ElderMainScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Header Section
             Text(
                 text = "My Help Requests",
                 style = MaterialTheme.typography.headlineMedium,
@@ -36,10 +40,12 @@ fun ElderMainScreen(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
+            // Loading State
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             }
 
+            // Error State
             errorMessage?.let {
                 Text(
                     text = "Error: $it",
@@ -48,6 +54,7 @@ fun ElderMainScreen(
                 )
             }
 
+            // Help Requests List
             if (!isLoading && errorMessage == null) {
                 if (previousRequests.isEmpty()) {
                     Text(
@@ -70,6 +77,7 @@ fun ElderMainScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // New Request Button
             Button(
                 onClick = onNewRequestClick,
                 modifier = Modifier
@@ -81,6 +89,7 @@ fun ElderMainScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Navigation Buttons
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
