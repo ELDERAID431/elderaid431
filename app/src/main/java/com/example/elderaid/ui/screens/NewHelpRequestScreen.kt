@@ -264,6 +264,7 @@ fun NewHelpRequestScreen(
                         "category" to category,
                         "creatorId" to userId,
                         "creatorRole" to "elder",
+                        "acceptedVolunteers" to emptyList<String>(), // Initialize as empty list
                         "timestamp" to com.google.firebase.Timestamp.now()
                     )
                     isLoading = true
