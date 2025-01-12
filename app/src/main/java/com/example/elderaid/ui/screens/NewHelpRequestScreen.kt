@@ -1,11 +1,15 @@
 package com.example.elderaid.ui.screens
 
+import android.Manifest
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Context
+import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.auth.FirebaseAuth
@@ -47,61 +52,52 @@ fun NewHelpRequestScreen(
     val dateFormatter = SimpleDateFormat("EEEE, dd MMM yyyy", Locale.getDefault())
     val timeFormatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
 
-    fun showDatePicker(context: Context, onDateSelected: (Date) -> Unit) {
-        val calendar = Calendar.getInstance()
-        DatePickerDialog(
-            context,
-            { _, year, month, dayOfMonth ->
-                calendar.set(year, month, dayOfMonth)
-                onDateSelected(calendar.time)
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        ).show()
-    }
+    // Function to fetch current location
+    fun fetchCurrentLocation(context: Context, onLocationFetched: (String) -> Unit) {
+        if (ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            onLocationFetched("Permission not granted")
+            return
+        }
 
-    fun showTimePicker(context: Context, onTimeSelected: (Date) -> Unit) {
-        val calendar = Calendar.getInstance()
-        TimePickerDialog(
-            context,
-            { _, hourOfDay, minute ->
-                calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
-                calendar.set(Calendar.MINUTE, minute)
-                onTimeSelected(calendar.time)
-            },
-            calendar.get(Calendar.HOUR_OF_DAY),
-            calendar.get(Calendar.MINUTE),
-            false
-        ).show()
-    }
-
-    fun fetchCurrentLocation(onLocationFetched: (String) -> Unit) {
-        try {
-            fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-                if (location != null) {
-                    val geocoder = Geocoder(context, Locale.getDefault())
-                    val addresses: List<Address>? =
-                        geocoder.getFromLocation(location.latitude, location.longitude, 1)
-                    if (!addresses.isNullOrEmpty()) { // Check if the addresses list is null or empty
-                        val address = addresses[0]
-                        val fullAddress =
-                            "${address.thoroughfare}, ${address.locality}, ${address.countryName}"
-                        onLocationFetched(fullAddress)
-                    } else {
-                        onLocationFetched("Location not found")
-                    }
+        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+            if (location != null) {
+                val geocoder = Geocoder(context, Locale.getDefault())
+                val addresses: List<Address>? = geocoder.getFromLocation(
+                    location.latitude,
+                    location.longitude,
+                    1
+                )
+                if (!addresses.isNullOrEmpty()) {
+                    val fullAddress = addresses[0].getAddressLine(0)
+                    onLocationFetched(fullAddress)
                 } else {
-                    onLocationFetched("Unable to fetch location")
+                    onLocationFetched("Location not found")
                 }
-            }.addOnFailureListener {
-                onLocationFetched("Location fetch failed: ${it.localizedMessage}")
+            } else {
+                onLocationFetched("Unable to fetch location")
             }
-        } catch (e: SecurityException) {
-            onLocationFetched("Permission denied")
+        }.addOnFailureListener {
+            onLocationFetched("Location fetch failed: ${it.localizedMessage}")
         }
     }
 
+    // Permission launcher
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                fetchCurrentLocation(context) { fetchedLocation ->
+                    location = fetchedLocation
+                }
+            } else {
+                location = "Permission not granted"
+            }
+        }
+    )
 
     Column(
         modifier = Modifier
@@ -110,10 +106,11 @@ fun NewHelpRequestScreen(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("New Task", style = MaterialTheme.typography.headlineMedium)
+        Text("New Help Request", style = MaterialTheme.typography.headlineMedium)
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Title input
         Text("Title", fontSize = 16.sp)
         TextField(
             value = title,
@@ -125,18 +122,40 @@ fun NewHelpRequestScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Date and Location
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                 Text("Date", fontSize = 16.sp)
-                Button(onClick = { showDatePicker(context) { selectedDate -> date = selectedDate } }) {
+                Button(onClick = {
+                    val calendar = Calendar.getInstance()
+                    DatePickerDialog(
+                        context,
+                        { _, year, month, dayOfMonth ->
+                            calendar.set(year, month, dayOfMonth)
+                            date = calendar.time
+                        },
+                        calendar.get(Calendar.YEAR),
+                        calendar.get(Calendar.MONTH),
+                        calendar.get(Calendar.DAY_OF_MONTH)
+                    ).show()
+                }) {
                     Text(date?.let { dateFormatter.format(it) } ?: "Select Date")
                 }
             }
+
             Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
                 Text("Location", fontSize = 16.sp)
                 Button(onClick = {
-                    fetchCurrentLocation { fetchedLocation ->
-                        location = fetchedLocation
+                    if (ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                        ) == PackageManager.PERMISSION_GRANTED
+                    ) {
+                        fetchCurrentLocation(context) { fetchedLocation ->
+                            location = fetchedLocation
+                        }
+                    } else {
+                        permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                     }
                 }) {
                     Text(if (location.isBlank()) "Fetch Location" else location)
@@ -146,16 +165,44 @@ fun NewHelpRequestScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Start and End Time
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                 Text("Start Time", fontSize = 16.sp)
-                Button(onClick = { showTimePicker(context) { selectedTime -> startTime = selectedTime } }) {
+                Button(onClick = {
+                    val calendar = Calendar.getInstance()
+                    TimePickerDialog(
+                        context,
+                        { _, hourOfDay, minute ->
+                            calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                            calendar.set(Calendar.MINUTE, minute)
+                            startTime = calendar.time
+                        },
+                        calendar.get(Calendar.HOUR_OF_DAY),
+                        calendar.get(Calendar.MINUTE),
+                        false
+                    ).show()
+                }) {
                     Text(startTime?.let { timeFormatter.format(it) } ?: "Select Start Time")
                 }
             }
+
             Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
                 Text("End Time", fontSize = 16.sp)
-                Button(onClick = { showTimePicker(context) { selectedTime -> endTime = selectedTime } }) {
+                Button(onClick = {
+                    val calendar = Calendar.getInstance()
+                    TimePickerDialog(
+                        context,
+                        { _, hourOfDay, minute ->
+                            calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                            calendar.set(Calendar.MINUTE, minute)
+                            endTime = calendar.time
+                        },
+                        calendar.get(Calendar.HOUR_OF_DAY),
+                        calendar.get(Calendar.MINUTE),
+                        false
+                    ).show()
+                }) {
                     Text(endTime?.let { timeFormatter.format(it) } ?: "Select End Time")
                 }
             }
@@ -163,6 +210,7 @@ fun NewHelpRequestScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Description
         Text("Description", fontSize = 16.sp)
         TextField(
             value = description,
@@ -174,6 +222,7 @@ fun NewHelpRequestScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Category
         Text("Category", fontSize = 16.sp)
         val categories = listOf(
             "Home shopping", "Coffee and tea time", "Pharmacy", "House cleaning",
@@ -198,6 +247,7 @@ fun NewHelpRequestScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Submit Button
         Button(
             onClick = {
                 val userId = auth.currentUser?.uid
@@ -248,6 +298,7 @@ fun NewHelpRequestScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Back Button
         Button(
             onClick = { onCancel() },
             modifier = Modifier.fillMaxWidth(),
