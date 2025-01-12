@@ -1,18 +1,17 @@
-package com.example.elderaid.ui.screens
-
 import HelpRequestCard
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Composable
 fun ElderMainScreen(
@@ -25,6 +24,8 @@ fun ElderMainScreen(
     onSOSClick: () -> Unit,
     onVolunteerOffersClick: () -> Unit
 ) {
+    var selectedRequest by remember { mutableStateOf<Map<String, Any>?>(null) }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -68,7 +69,7 @@ fun ElderMainScreen(
                             HelpRequestCard(
                                 requestTitle = request["title"] as? String ?: "No Title",
                                 onClick = {
-                                    onViewApplicantsClick(request["id"] as? String ?: "")
+                                    selectedRequest = request
                                 }
                             )
                             Spacer(modifier = Modifier.height(8.dp))
@@ -123,5 +124,49 @@ fun ElderMainScreen(
                 }
             }
         }
+    }
+
+    // Pop-up for Request Details
+    selectedRequest?.let { request ->
+        AlertDialog(
+            onDismissRequest = { selectedRequest = null },
+            confirmButton = {
+                Button(onClick = { selectedRequest = null }) {
+                    Text("Close")
+                }
+            },
+            title = {
+                Text(text = request["title"] as? String ?: "Request Details")
+            },
+            text = {
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+
+                val date = (request["date"] as? Long)?.let {
+                    dateFormat.format(Date(it))
+                } ?: "No Date"
+
+                val startTime = (request["startTime"] as? Long)?.let {
+                    dateFormat.format(Date(it))
+                } ?: "No Start Time"
+
+                val endTime = (request["endTime"] as? Long)?.let {
+                    dateFormat.format(Date(it))
+                } ?: "No End Time"
+
+                Column {
+                    Text(text = "Description: ${request["description"] as? String ?: "No Description"}")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = "Category: ${request["category"] as? String ?: "No Category"}")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = "Location: ${request["location"] as? String ?: "No Location"}")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = "Date: $date")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = "Start Time: $startTime")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = "End Time: $endTime")
+                }
+            }
+        )
     }
 }
