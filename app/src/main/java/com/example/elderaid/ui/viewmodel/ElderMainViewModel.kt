@@ -22,7 +22,7 @@ class ElderMainViewModel : ViewModel() {
             .addOnSuccessListener { documents ->
                 val requests = documents.mapNotNull { document ->
                     try {
-                        val data = document.data ?: return@mapNotNull null
+                        val data = document.data
                         data["id"] = document.id
                         val timestamp = data["timestamp"]
                         data["timestamp"] = when (timestamp) {
