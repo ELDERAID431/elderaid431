@@ -10,6 +10,8 @@ import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+
 
 
 @Composable
@@ -27,7 +29,7 @@ fun VolunteerOffersScreen(
         val userId = auth.currentUser?.uid ?: return@LaunchedEffect
         firestore.collection("help_requests")
             .whereEqualTo("creatorId", userId)
-            .whereArrayContains("volunteers", true)
+            .whereNotEqualTo("volunteers", emptyList<Any>())
             .get()
             .addOnSuccessListener { querySnapshot ->
                 offers = querySnapshot.documents.mapNotNull { it.data }
@@ -71,23 +73,49 @@ fun OfferCard(
     onAccept: () -> Unit,
     onReject: () -> Unit
 ) {
-    Card(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+    // State to track whether the "Accept" button should be disabled
+    var isRejected by remember { mutableStateOf(false) }
+
+    Card(modifier = Modifier
+        .fillMaxWidth()
+        .padding(8.dp)
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = offer["title"] as? String ?: "No Title")
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = offer["description"] as? String ?: "No Description")
 
+            Spacer(modifier = Modifier.height(8.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Button(onClick = onAccept) {
+                // Accept button becomes disabled if `isRejected` is true
+                Button(
+                    onClick = {
+                        onAccept()
+                    },
+                    enabled = !isRejected, // Disable the button if rejected
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isRejected) Color.Gray else MaterialTheme.colorScheme.primary
+                    )
+                ) {
                     Text("Accept")
                 }
-                Button(onClick = onReject) {
+
+                Button(
+                    onClick = {
+                        isRejected = true // Set state to disable the "Accept" button
+                        onReject() // Call the reject logic
+                    }
+                ) {
                     Text("Reject")
                 }
             }
         }
     }
 }
+
+
+
