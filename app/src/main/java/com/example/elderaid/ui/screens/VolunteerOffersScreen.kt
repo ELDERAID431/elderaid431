@@ -22,6 +22,7 @@ fun VolunteerOffersScreen(
     var offers by remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var selectedOffer by remember { mutableStateOf<Map<String, Any>?>(null) } // To display details dialog
 
     LaunchedEffect(Unit) {
         val userId = auth.currentUser?.uid ?: return@LaunchedEffect
@@ -48,8 +49,11 @@ fun VolunteerOffersScreen(
                 items(offers) { offer ->
                     OfferCard(
                         offer = offer,
-                        onAccept = { /* Handle Accept */ },
-                        onReject = { /* Handle Reject */ }
+                        onAccept = { /* Add Accept logic */ },
+                        onReject = { /* Add Reject logic */ },
+                        onDetails = {
+                            selectedOffer = offer // Show offer details in a dialog
+                        }
                     )
                 }
             }
@@ -62,4 +66,40 @@ fun VolunteerOffersScreen(
             Text("Back to Main Screen")
         }
     }
+
+    // Offer Details Dialog
+    selectedOffer?.let { offer ->
+        OfferDetailsDialog(
+            offer = offer,
+            onDismiss = { selectedOffer = null }
+        )
+    }
+}
+
+@Composable
+fun OfferDetailsDialog(
+    offer: Map<String, Any>,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text("Close")
+            }
+        },
+        title = {
+            Text(text = offer["title"] as? String ?: "No Title")
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text("Date: ${offer["date"] ?: "No Date"}")
+                Text("Start Time: ${offer["startTime"] ?: "No Start Time"}")
+                Text("End Time: ${offer["endTime"] ?: "No End Time"}")
+                Text("Location: ${offer["location"] ?: "No Location"}")
+                Text("Description: ${offer["description"] ?: "No Description"}")
+                Text("Category: ${offer["category"] ?: "No Category"}")
+            }
+        }
+    )
 }

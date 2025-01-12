@@ -3,6 +3,10 @@ package com.example.elderaid.ui.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
@@ -10,8 +14,12 @@ import androidx.compose.ui.unit.dp
 fun OfferCard(
     offer: Map<String, Any>,
     onAccept: () -> Unit,
-    onReject: () -> Unit
+    onReject: () -> Unit,
+    onDetails: () -> Unit // Added parameter for viewing details
 ) {
+    // Local state to manage the visibility of the "Accept" button
+    var isAcceptVisible by remember { mutableStateOf(true) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -26,13 +34,26 @@ fun OfferCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Button(onClick = onAccept) {
-                    Text("Accept")
+                if (isAcceptVisible) {
+                    Button(onClick = {
+                        onAccept()
+                    }) {
+                        Text("Accept")
+                    }
                 }
-                Button(onClick = onReject) {
+                Button(onClick = {
+                    isAcceptVisible = false // Hide the Accept button
+                    onReject()
+                }) {
                     Text("Reject")
+                }
+                Button(onClick = onDetails) {
+                    Text("Details")
                 }
             }
         }
     }
 }
+
+
+
