@@ -5,11 +5,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import androidx.compose.ui.Alignment
 import com.example.elderaid.ui.components.OfferCard
 
 @Composable
@@ -23,7 +23,7 @@ fun VolunteerOffersScreen(
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // Fetch offers with accepted volunteers
+    // Fetch tasks with accepted volunteers
     LaunchedEffect(Unit) {
         val userId = auth.currentUser?.uid ?: return@LaunchedEffect
         firestore.collection("help_requests")
@@ -35,7 +35,6 @@ fun VolunteerOffersScreen(
                     val acceptedVolunteers = data?.get("acceptedVolunteers") as? List<String>
                     if (!acceptedVolunteers.isNullOrEmpty()) {
                         data["id"] = doc.id
-                        data["acceptedVolunteers"] = acceptedVolunteers
                         data
                     } else null
                 }
