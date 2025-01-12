@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -48,6 +49,8 @@ fun ProfileScreen(
     var photoUrl by remember { mutableStateOf<String?>(null) }
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var phoneNumber by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(true) }
     var successMessage by remember { mutableStateOf<String?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -66,6 +69,7 @@ fun ProfileScreen(
                         photoUrl = document.getString("photoUrl")
                         fullName = document.getString("fullName") ?: ""
                         email = document.getString("email") ?: ""
+                        phoneNumber = document.getString("phoneNumber") ?: ""
                         isLoading = false
                     } else {
                         errorMessage = "User data not found"
@@ -110,11 +114,21 @@ fun ProfileScreen(
         } else if (errorMessage != null) {
             Text("Error: $errorMessage", color = MaterialTheme.colorScheme.error)
         } else {
-            Text("Edit Profile", style = MaterialTheme.typography.headlineMedium)
+            Image(
+                painter = painterResource(id = R.drawable.rectangle_2),
+                contentDescription = "Background Shape",
+                contentScale = ContentScale.FillWidth,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Profile Picture
+            Text("Edit Profile", style = MaterialTheme.typography.headlineMedium)
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             Box(contentAlignment = Alignment.BottomEnd, modifier = Modifier.size(100.dp)) {
                 Image(
                     painter = if (photoUrl != null) {
@@ -141,28 +155,44 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             ProfileTextField(label = "Full Name", value = fullName) { fullName = it }
-            ProfileTextField(label = "Email", value = email) { email = it }
+            ProfileTextField(label = "Email Address", value = email) { email = it }
+            ProfileTextField(label = "Phone Number", value = phoneNumber, keyboardType = KeyboardType.Phone) { phoneNumber = it }
+            ProfileTextField(label = "Password", value = password, keyboardType = KeyboardType.Password) { password = it }
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = {
+                    val userId = auth.currentUser?.uid
+                    if (userId != null) {
+                        val updates = mapOf(
+                            "fullName" to fullName,
+                            "email" to email,
+                            "phoneNumber" to phoneNumber
+                        )
+                        firestore.collection("users").document(userId)
+                            .update(updates)
+                            .addOnSuccessListener {
+                                successMessage = "Profile updated successfully"
+                            }
+                            .addOnFailureListener { exception ->
+                                errorMessage = exception.localizedMessage ?: "Error updating profile"
+                            }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Update", fontSize = 16.sp)
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             successMessage?.let {
                 Text(it, color = Color.Green)
             }
+
             errorMessage?.let {
                 Text(it, color = MaterialTheme.colorScheme.error)
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Button(onClick = onBack) { Text("Back") }
-                Button(onClick = {
-                    auth.signOut()
-                    onLogout()
-                }) { Text("Logout") }
             }
         }
     }
