@@ -1,10 +1,12 @@
 package com.example.elderaid.ui.navigation
 
 import androidx.compose.runtime.*
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.elderaid.ui.screens.*
+import com.example.elderaid.ui.viewmodel.ElderMainViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -30,10 +32,16 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
                             .get()
                             .addOnSuccessListener { document ->
                                 val role = document.getString("role")
-                                if (role == "Elder") {
-                                    navController.navigate("elderMain")
-                                } else if (role == "Volunteer") {
-                                    navController.navigate("volunteerMain")
+                                when (role) {
+                                    "Elder" -> navController.navigate("elderMain") {
+                                        popUpTo("login") { inclusive = true }
+                                    }
+                                    "Volunteer" -> navController.navigate("volunteerMain") {
+                                        popUpTo("login") { inclusive = true }
+                                    }
+                                    else -> {
+                                        println("Unknown role: $role")
+                                    }
                                 }
                             }
                             .addOnFailureListener {
@@ -57,10 +65,30 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
 
         // Elder Main Screen
         composable("elderMain") {
+            val viewModel: ElderMainViewModel = viewModel()
+            var previousRequests by remember { mutableStateOf(listOf<Map<String, String>>()) }
+            var isLoading by remember { mutableStateOf(false) }
+            var errorMessage by remember { mutableStateOf<String?>(null) }
+
+            LaunchedEffect(Unit) {
+                isLoading = true
+                viewModel.fetchPreviousRequests(
+                    elderUserId = auth.currentUser?.uid ?: "",
+                    onSuccess = { requests ->
+                        previousRequests = requests
+                        isLoading = false
+                    },
+                    onFailure = { error ->
+                        errorMessage = error
+                        isLoading = false
+                    }
+                )
+            }
+
             ElderMainScreen(
-                previousRequests = listOf(),
-                isLoading = false,
-                errorMessage = null,
+                previousRequests = previousRequests,
+                isLoading = isLoading,
+                errorMessage = errorMessage,
                 onNewRequestClick = { navController.navigate("newHelpRequest") },
                 onViewApplicantsClick = { requestId ->
                     println("View applicants for request ID: $requestId")
@@ -76,13 +104,13 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
             var errorMessage by remember { mutableStateOf<String?>(null) }
             var isLoading by remember { mutableStateOf(true) }
 
-            // Fetch tasks from Firestore
             LaunchedEffect(Unit) {
                 FirebaseFirestore.getInstance().collection("help_requests")
                     .get()
                     .addOnSuccessListener { documents ->
                         tasks = documents.map { document ->
                             mapOf(
+                                "id" to document.id,
                                 "title" to (document.getString("title") ?: "No Title"),
                                 "description" to (document.getString("description") ?: "No Description"),
                                 "timestamp" to (document.getTimestamp("timestamp")?.toDate()?.toString() ?: "Unknown")
@@ -101,7 +129,6 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
                 isLoading = isLoading,
                 errorMessage = errorMessage,
                 onTaskClick = { task ->
-                    // Handle task click (navigate to detail screen or perform an action)
                     println("Clicked on task: $task")
                 }
             )
@@ -111,7 +138,9 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
         composable("newHelpRequest") {
             NewHelpRequestScreen(
                 onSubmitSuccess = {
-                    navController.popBackStack()
+                    navController.navigate("elderMain") {
+                        popUpTo("elderMain") { inclusive = true }
+                    }
                 },
                 onCancel = {
                     navController.popBackStack()

@@ -73,16 +73,12 @@ fun NewHelpRequestScreen(
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
             .padding(16.dp),
-        horizontalAlignment = Alignment.Start
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Header
-        Text(
-            text = "New Task",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+        Text("New Task", style = MaterialTheme.typography.headlineMedium)
 
-        // Date and Location Row
+        Spacer(modifier = Modifier.height(16.dp))
+
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                 Text("Date", fontSize = 16.sp)
@@ -103,7 +99,6 @@ fun NewHelpRequestScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Start and End Time Row
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                 Text("Start Time", fontSize = 16.sp)
@@ -121,42 +116,33 @@ fun NewHelpRequestScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Description
-        Text("Description", fontSize = 16.sp, modifier = Modifier.padding(bottom = 8.dp))
+        Text("Description", fontSize = 16.sp)
         TextField(
             value = description,
             onValueChange = { description = it },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(80.dp),
+            modifier = Modifier.fillMaxWidth().height(80.dp),
             singleLine = false
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Category Selection
-        Text("Category", fontSize = 16.sp, modifier = Modifier.padding(bottom = 8.dp))
-        Column {
-            val categories = listOf(
-                "Home shopping", "Coffee and tea time", "Pharmacy", "House cleaning",
-                "Brain exercises", "Chatting", "Walks", "Food provision"
-            )
-            categories.chunked(2).forEach { row ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    row.forEach { categoryName ->
-                        OutlinedButton(
-                            onClick = { category = categoryName },
-                            shape = RoundedCornerShape(20.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = if (category == categoryName) Color.Gray else Color.White
-                            ),
-                            modifier = Modifier.weight(1f).padding(4.dp)
-                        ) {
-                            Text(categoryName, fontSize = 12.sp)
-                        }
+        Text("Category", fontSize = 16.sp)
+        val categories = listOf(
+            "Home shopping", "Coffee and tea time", "Pharmacy", "House cleaning",
+            "Brain exercises", "Chatting", "Walks", "Food provision"
+        )
+        categories.chunked(2).forEach { row ->
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                row.forEach { categoryName ->
+                    OutlinedButton(
+                        onClick = { category = categoryName },
+                        shape = RoundedCornerShape(20.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = if (category == categoryName) Color.Gray else Color.White
+                        ),
+                        modifier = Modifier.weight(1f).padding(4.dp)
+                    ) {
+                        Text(categoryName, fontSize = 12.sp)
                     }
                 }
             }
@@ -164,61 +150,48 @@ fun NewHelpRequestScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Submit and Cancel Buttons
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+        Button(
+            onClick = {
+                val userId = auth.currentUser?.uid
+                if (userId != null && date != null && startTime != null && endTime != null &&
+                    location.isNotBlank() && description.isNotBlank() && category.isNotBlank()
+                ) {
+                    val helpRequest = hashMapOf(
+                        "date" to date!!.time,
+                        "startTime" to startTime!!.time,
+                        "endTime" to endTime!!.time,
+                        "location" to location,
+                        "description" to description,
+                        "category" to category,
+                        "creatorId" to userId
+                    )
+                    isLoading = true
+                    firestore.collection("help_requests")
+                        .add(helpRequest)
+                        .addOnSuccessListener {
+                            isLoading = false
+                            onSubmitSuccess()
+                        }
+                        .addOnFailureListener { exception ->
+                            isLoading = false
+                            errorMessage = "Failed to save request: ${exception.localizedMessage}"
+                        }
+                } else {
+                    errorMessage = "All fields are required."
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Button(
-                onClick = onCancel,
-                modifier = Modifier.weight(1f).padding(end = 8.dp)
-            ) {
-                Text("Cancel")
-            }
-            Button(
-                onClick = {
-                    val userId = auth.currentUser?.uid
-                    if (userId != null && date != null && startTime != null && endTime != null &&
-                        location.isNotBlank() && description.isNotBlank() && category.isNotBlank()
-                    ) {
-                        val helpRequest = hashMapOf(
-                            "date" to date!!.time,
-                            "startTime" to startTime!!.time,
-                            "endTime" to endTime!!.time,
-                            "location" to location,
-                            "description" to description,
-                            "category" to category,
-                            "createdBy" to userId
-                        )
-                        isLoading = true
-                        firestore.collection("help_requests")
-                            .add(helpRequest)
-                            .addOnSuccessListener {
-                                isLoading = false
-                                onSubmitSuccess()
-                            }
-                            .addOnFailureListener {
-                                isLoading = false
-                                errorMessage = "Failed to save request."
-                            }
-                    } else {
-                        errorMessage = "All fields are required."
-                    }
-                },
-                modifier = Modifier.weight(1f).padding(start = 8.dp)
-            ) {
-                Text("Submit")
-            }
+            Text("Submit")
         }
 
-        // Loading State and Error Message
         if (isLoading) {
             Spacer(modifier = Modifier.height(16.dp))
             CircularProgressIndicator()
         }
 
         errorMessage?.let {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(it, color = MaterialTheme.colorScheme.error)
         }
     }
