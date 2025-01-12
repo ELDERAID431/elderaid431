@@ -1,6 +1,7 @@
 package com.example.elderaid.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,15 +21,21 @@ fun ElderMainScreen(
     onNewRequestClick: () -> Unit,
     onViewApplicantsClick: (String) -> Unit,
     onProfileClick: () -> Unit,
-    onSOSClick: () -> Unit
+    onSOSClick: () -> Unit,
+    onVolunteerOffersClick: () -> Unit // Added Volunteer Offers Button
 ) {
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5))) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF5F5F5))
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Header
             Text(
                 text = "My Help Requests",
                 style = MaterialTheme.typography.headlineMedium,
@@ -36,10 +43,12 @@ fun ElderMainScreen(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
+            // Loading State
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             }
 
+            // Error State
             errorMessage?.let {
                 Text(
                     text = "Error: $it",
@@ -48,6 +57,7 @@ fun ElderMainScreen(
                 )
             }
 
+            // Help Requests List
             if (!isLoading && errorMessage == null) {
                 if (previousRequests.isEmpty()) {
                     Text(
@@ -60,7 +70,9 @@ fun ElderMainScreen(
                         items(previousRequests) { request ->
                             HelpRequestCard(
                                 requestTitle = request["title"] as? String ?: "No Title",
-                                onClick = { onViewApplicantsClick(request["id"] as? String ?: "") }
+                                onClick = {
+                                    onViewApplicantsClick(request["id"] as? String ?: "")
+                                }
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                         }
@@ -70,6 +82,7 @@ fun ElderMainScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Buttons Section
             Button(
                 onClick = onNewRequestClick,
                 modifier = Modifier
@@ -81,19 +94,35 @@ fun ElderMainScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Volunteer Offers Button
+            Button(
+                onClick = onVolunteerOffersClick, // Navigates to Volunteer Offers Screen
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) {
+                Text("Volunteer Offers")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Button(
                     onClick = onProfileClick,
-                    modifier = Modifier.weight(1f).padding(end = 8.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp)
                 ) {
                     Text("Profile")
                 }
                 Button(
                     onClick = onSOSClick,
-                    modifier = Modifier.weight(1f).padding(start = 8.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 8.dp)
                 ) {
                     Text("SOS")
                 }
@@ -107,11 +136,10 @@ fun HelpRequestCard(requestTitle: String, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
-            .padding(4.dp),
+            .padding(4.dp)
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        onClick = onClick
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),

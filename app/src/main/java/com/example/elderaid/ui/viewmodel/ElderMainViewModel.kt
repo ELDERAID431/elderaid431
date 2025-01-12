@@ -11,34 +11,37 @@ class ElderMainViewModel : ViewModel() {
         onSuccess: (List<Map<String, Any>>) -> Unit,
         onFailure: (String) -> Unit
     ) {
-        if (elderUserId.isBlank()) {
-            onFailure("User ID is blank.")
-            return
-        }
-
         firestore.collection("help_requests")
             .whereEqualTo("creatorId", elderUserId)
             .get()
             .addOnSuccessListener { documents ->
-                val requests = documents.mapNotNull { document ->
-                    try {
-                        val data = document.data
-                        data["id"] = document.id
-                        val timestamp = data["timestamp"]
-                        data["timestamp"] = when (timestamp) {
-                            is com.google.firebase.Timestamp -> timestamp.toDate().time
-                            is Long -> timestamp
-                            else -> null // Handle unexpected types
-                        }
-                        data
-                    } catch (e: Exception) {
-                        null // Skip invalid data
-                    }
+                val requests = documents.map { document ->
+                    document.data.plus("id" to document.id)
                 }
                 onSuccess(requests)
             }
             .addOnFailureListener { exception ->
-                onFailure(exception.localizedMessage ?: "Failed to fetch requests.")
+                onFailure(exception.localizedMessage ?: "Failed to fetch requests")
+            }
+    }
+
+    fun fetchOffersForElder(
+        elderUserId: String,
+        onSuccess: (List<Map<String, Any>>) -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        firestore.collection("help_requests")
+            .whereEqualTo("creatorId", elderUserId)
+            .whereArrayContains("volunteers", true)
+            .get()
+            .addOnSuccessListener { documents ->
+                val offers = documents.map { document ->
+                    document.data.plus("id" to document.id)
+                }
+                onSuccess(offers)
+            }
+            .addOnFailureListener { exception ->
+                onFailure(exception.localizedMessage ?: "Failed to fetch offers")
             }
     }
 }

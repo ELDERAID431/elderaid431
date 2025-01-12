@@ -64,7 +64,7 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
         // Elder Main Screen
         composable("elderMain") {
             val viewModel: ElderMainViewModel = viewModel()
-            var previousRequests by remember { mutableStateOf(listOf<Map<String, Any>>()) } // Updated type
+            var previousRequests by remember { mutableStateOf(listOf<Map<String, Any>>()) }
             var isLoading by remember { mutableStateOf(false) }
             var errorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -92,7 +92,17 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
                     println("View applicants for request ID: $requestId")
                 },
                 onProfileClick = { navController.navigate("profile") },
-                onSOSClick = { navController.navigate("sos") }
+                onSOSClick = { navController.navigate("sos") },
+                onVolunteerOffersClick = { navController.navigate("volunteerOffers") } // Correctly added navigation
+            )
+        }
+
+        // Volunteer Offers Screen
+        composable("volunteerOffers") {
+            VolunteerOffersScreen(
+                onBack = {
+                    navController.popBackStack()
+                }
             )
         }
 

@@ -7,23 +7,30 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import androidx.compose.ui.Alignment
 
 
 @Composable
-fun VolunteerMainScreen(
-    onTaskClick: (Map<String, Any>) -> Unit
+fun VolunteerOffersScreen(
+    onBack: () -> Unit
 ) {
-    var tasks by remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
+    val auth = FirebaseAuth.getInstance()
+    val firestore = FirebaseFirestore.getInstance()
+
+    var offers by remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
-        FirebaseFirestore.getInstance().collection("help_requests")
+        val userId = auth.currentUser?.uid ?: return@LaunchedEffect
+        firestore.collection("help_requests")
+            .whereEqualTo("creatorId", userId)
+            .whereArrayContains("volunteers", true)
             .get()
             .addOnSuccessListener { querySnapshot ->
-                tasks = querySnapshot.documents.mapNotNull { it.data }
+                offers = querySnapshot.documents.mapNotNull { it.data }
                 isLoading = false
             }
             .addOnFailureListener { exception ->
@@ -39,38 +46,45 @@ fun VolunteerMainScreen(
             Text(text = "Error: $errorMessage", color = MaterialTheme.colorScheme.error)
         } else {
             LazyColumn {
-                items(tasks) { task ->
-                    VolunteerTaskCard(task = task, onTaskClick = onTaskClick)
+                items(offers) { offer ->
+                    OfferCard(
+                        offer = offer,
+                        onAccept = { /* Handle Accept */ },
+                        onReject = { /* Handle Reject */ }
+                    )
                 }
             }
+        }
+
+        Button(
+            onClick = onBack,
+            modifier = Modifier.padding(top = 16.dp).fillMaxWidth()
+        ) {
+            Text("Back to Main Screen")
         }
     }
 }
 
 @Composable
-fun VolunteerTaskCard(
-    task: Map<String, Any>,
-    onTaskClick: (Map<String, Any>) -> Unit
+fun OfferCard(
+    offer: Map<String, Any>,
+    onAccept: () -> Unit,
+    onReject: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(8.dp)
-    ) {
+    Card(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = task["title"] as? String ?: "No Title")
+            Text(text = offer["title"] as? String ?: "No Title")
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = task["description"] as? String ?: "No Description")
+            Text(text = offer["description"] as? String ?: "No Description")
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Button(onClick = { onTaskClick(task) }) {
-                    Text("Details")
-                }
-                Button(onClick = { /* Handle Accept */ }) {
+                Button(onClick = onAccept) {
                     Text("Accept")
                 }
-                Button(onClick = { /* Handle Reject */ }) {
+                Button(onClick = onReject) {
                     Text("Reject")
                 }
             }
