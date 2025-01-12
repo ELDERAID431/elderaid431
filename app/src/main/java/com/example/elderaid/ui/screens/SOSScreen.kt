@@ -81,7 +81,7 @@ fun SOSScreen(
                             ) == android.content.pm.PackageManager.PERMISSION_GRANTED
                         ) {
                             val callIntent = Intent(Intent.ACTION_CALL).apply {
-                                data = Uri.parse("tel:+9011232232") // Replace with your desired number
+                                data = Uri.parse("tel:+9011239999232") // Replace with your desired number
 
                             }
                             ContextCompat.startActivity(context, callIntent, null)
