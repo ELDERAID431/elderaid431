@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
@@ -27,6 +28,8 @@ fun NewHelpRequestScreen(
     val auth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
 
+    // State variables
+    var title by remember { mutableStateOf("") }
     var date by remember { mutableStateOf<Date?>(null) }
     var startTime by remember { mutableStateOf<Date?>(null) }
     var endTime by remember { mutableStateOf<Date?>(null) }
@@ -64,7 +67,7 @@ fun NewHelpRequestScreen(
             },
             calendar.get(Calendar.HOUR_OF_DAY),
             calendar.get(Calendar.MINUTE),
-            false // Use 12-hour format
+            false // 12-hour format
         ).show()
     }
 
@@ -76,6 +79,17 @@ fun NewHelpRequestScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("New Task", style = MaterialTheme.typography.headlineMedium)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text("Title", fontSize = 16.sp)
+        TextField(
+            value = title,
+            onValueChange = { title = it },
+            placeholder = { Text("Enter title") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -91,6 +105,7 @@ fun NewHelpRequestScreen(
                 TextField(
                     value = location,
                     onValueChange = { location = it },
+                    placeholder = { Text("Enter location") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -120,6 +135,7 @@ fun NewHelpRequestScreen(
         TextField(
             value = description,
             onValueChange = { description = it },
+            placeholder = { Text("Enter description") },
             modifier = Modifier.fillMaxWidth().height(80.dp),
             singleLine = false
         )
@@ -132,7 +148,7 @@ fun NewHelpRequestScreen(
             "Brain exercises", "Chatting", "Walks", "Food provision"
         )
         categories.chunked(2).forEach { row ->
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 row.forEach { categoryName ->
                     OutlinedButton(
                         onClick = { category = categoryName },
@@ -153,10 +169,11 @@ fun NewHelpRequestScreen(
         Button(
             onClick = {
                 val userId = auth.currentUser?.uid
-                if (userId != null && date != null && startTime != null && endTime != null &&
+                if (userId != null && title.isNotBlank() && date != null && startTime != null && endTime != null &&
                     location.isNotBlank() && description.isNotBlank() && category.isNotBlank()
                 ) {
                     val helpRequest = hashMapOf(
+                        "title" to title,
                         "date" to date!!.time,
                         "startTime" to startTime!!.time,
                         "endTime" to endTime!!.time,
@@ -197,7 +214,6 @@ fun NewHelpRequestScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Geri Dön Butonu
         Button(
             onClick = { onCancel() },
             modifier = Modifier.fillMaxWidth(),
