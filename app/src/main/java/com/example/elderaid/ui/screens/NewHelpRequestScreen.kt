@@ -2,6 +2,10 @@ package com.example.elderaid.ui.screens
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.Context
+import android.location.Address
+import android.location.Geocoder
+import android.location.Location
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,13 +15,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.*
+
 @Composable
 fun NewHelpRequestScreen(
     onSubmitSuccess: () -> Unit,
@@ -26,6 +32,7 @@ fun NewHelpRequestScreen(
     val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
+    val fusedLocationClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
 
     var title by remember { mutableStateOf("") }
     var date by remember { mutableStateOf<Date?>(null) }
@@ -40,7 +47,7 @@ fun NewHelpRequestScreen(
     val dateFormatter = SimpleDateFormat("EEEE, dd MMM yyyy", Locale.getDefault())
     val timeFormatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
 
-    fun showDatePicker(onDateSelected: (Date) -> Unit) {
+    fun showDatePicker(context: Context, onDateSelected: (Date) -> Unit) {
         val calendar = Calendar.getInstance()
         DatePickerDialog(
             context,
@@ -54,7 +61,7 @@ fun NewHelpRequestScreen(
         ).show()
     }
 
-    fun showTimePicker(onTimeSelected: (Date) -> Unit) {
+    fun showTimePicker(context: Context, onTimeSelected: (Date) -> Unit) {
         val calendar = Calendar.getInstance()
         TimePickerDialog(
             context,
@@ -68,6 +75,33 @@ fun NewHelpRequestScreen(
             false
         ).show()
     }
+
+    fun fetchCurrentLocation(onLocationFetched: (String) -> Unit) {
+        try {
+            fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+                if (location != null) {
+                    val geocoder = Geocoder(context, Locale.getDefault())
+                    val addresses: List<Address>? =
+                        geocoder.getFromLocation(location.latitude, location.longitude, 1)
+                    if (!addresses.isNullOrEmpty()) { // Check if the addresses list is null or empty
+                        val address = addresses[0]
+                        val fullAddress =
+                            "${address.thoroughfare}, ${address.locality}, ${address.countryName}"
+                        onLocationFetched(fullAddress)
+                    } else {
+                        onLocationFetched("Location not found")
+                    }
+                } else {
+                    onLocationFetched("Unable to fetch location")
+                }
+            }.addOnFailureListener {
+                onLocationFetched("Location fetch failed: ${it.localizedMessage}")
+            }
+        } catch (e: SecurityException) {
+            onLocationFetched("Permission denied")
+        }
+    }
+
 
     Column(
         modifier = Modifier
@@ -94,19 +128,19 @@ fun NewHelpRequestScreen(
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                 Text("Date", fontSize = 16.sp)
-                Button(onClick = { showDatePicker { selectedDate -> date = selectedDate } }) {
+                Button(onClick = { showDatePicker(context) { selectedDate -> date = selectedDate } }) {
                     Text(date?.let { dateFormatter.format(it) } ?: "Select Date")
                 }
             }
             Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
                 Text("Location", fontSize = 16.sp)
-                TextField(
-                    value = location,
-                    onValueChange = { location = it },
-                    placeholder = { Text("Enter location") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
+                Button(onClick = {
+                    fetchCurrentLocation { fetchedLocation ->
+                        location = fetchedLocation
+                    }
+                }) {
+                    Text(if (location.isBlank()) "Fetch Location" else location)
+                }
             }
         }
 
@@ -115,13 +149,13 @@ fun NewHelpRequestScreen(
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                 Text("Start Time", fontSize = 16.sp)
-                Button(onClick = { showTimePicker { selectedTime -> startTime = selectedTime } }) {
+                Button(onClick = { showTimePicker(context) { selectedTime -> startTime = selectedTime } }) {
                     Text(startTime?.let { timeFormatter.format(it) } ?: "Select Start Time")
                 }
             }
             Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
                 Text("End Time", fontSize = 16.sp)
-                Button(onClick = { showTimePicker { selectedTime -> endTime = selectedTime } }) {
+                Button(onClick = { showTimePicker(context) { selectedTime -> endTime = selectedTime } }) {
                     Text(endTime?.let { timeFormatter.format(it) } ?: "Select End Time")
                 }
             }

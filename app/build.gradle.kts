@@ -44,18 +44,21 @@ android {
 
 dependencies {
     // Firebase BOM
-
     implementation(platform("com.google.firebase:firebase-bom:32.2.3"))
-    // OkHttp for HTTP requests
-    implementation ("com.squareup.okhttp3:okhttp:4.11.0")
 
-    // JSON parsing library
-    implementation ("org.json:json:20211205")
     // Firebase dependencies (without version numbers)
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-storage-ktx") // Firebase Storage
 
+    // Google Play Services Location API
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+
+    // OkHttp for HTTP requests
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
+
+    // JSON parsing library
+    implementation("org.json:json:20211205")
 
     // AndroidX Compose
     implementation("androidx.compose.ui:ui:1.5.1")
@@ -68,7 +71,6 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
     implementation("androidx.activity:activity-compose:1.7.2")
 
-
     // Testing
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
@@ -80,8 +82,6 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest:1.7.5")
     implementation("androidx.compose.material:material-icons-extended:1.5.1")
 
-    //image
+    // Image Loading (Coil)
     implementation("io.coil-kt:coil-compose:2.3.0")
-
-
 }
