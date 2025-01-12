@@ -9,8 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,6 +35,8 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.json.JSONObject
 import java.io.InputStream
+import androidx.compose.foundation.clickable
+
 
 @Composable
 fun ProfileScreen(
@@ -102,101 +102,133 @@ fun ProfileScreen(
     }
 
     // UI Layout
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF7F7F7))
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (isLoading) {
-            CircularProgressIndicator()
-        } else if (errorMessage != null) {
-            Text("Error: $errorMessage", color = MaterialTheme.colorScheme.error)
-        } else {
-            Image(
-                painter = painterResource(id = R.drawable.rectangle_2),
-                contentDescription = "Background Shape",
-                contentScale = ContentScale.FillWidth,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp)
-            )
+        // Background Image
+        Image(
+            painter = painterResource(id = R.drawable.arkaplan),
+            contentDescription = "Background Image",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
 
-            Spacer(modifier = Modifier.height(16.dp))
+        // Foreground Content
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator()
+            } else if (errorMessage != null) {
+                Text("Error: $errorMessage", color = MaterialTheme.colorScheme.error)
+            } else {
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Text("Edit Profile", style = MaterialTheme.typography.headlineMedium)
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Box(contentAlignment = Alignment.BottomEnd, modifier = Modifier.size(100.dp)) {
+                // Edit Profile Title
                 Image(
-                    painter = if (photoUrl != null) {
-                        rememberAsyncImagePainter(photoUrl)
-                    } else {
-                        painterResource(id = R.drawable.profile)
-                    },
-                    contentDescription = "Profile Picture",
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(CircleShape)
-                        .background(Color.Gray)
+                    painter = painterResource(id = R.drawable.edit),
+                    contentDescription = "Edit Profile",
+                    modifier = Modifier.size(100.dp)
                 )
-                IconButton(
-                    onClick = { launcher.launch("image/*") },
-                    modifier = Modifier
-                        .size(30.dp)
-                        .background(Color.White, CircleShape)
-                ) {
-                    Icon(Icons.Filled.Edit, contentDescription = "Edit Picture")
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Profile Picture
+                Box(contentAlignment = Alignment.BottomCenter, modifier = Modifier.size(100.dp)) {
+                    Image(
+                        painter = if (photoUrl != null) {
+                            rememberAsyncImagePainter(photoUrl)
+                        } else {
+                            painterResource(id = R.drawable.profile)
+                        },
+                        contentDescription = "Profile Picture",
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(CircleShape)
+                            .background(Color.Gray)
+                    )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                // Change Picture Text
+                Spacer(modifier = Modifier.height(8.dp))
+                Image(
+                    painter = painterResource(id = R.drawable.change),
+                    contentDescription = "Change Picture",
+                    modifier = Modifier.clickable { launcher.launch("image/*") }
+                )
 
-            ProfileTextField(label = "Full Name", value = fullName) { fullName = it }
-            ProfileTextField(label = "Email Address", value = email) { email = it }
-            ProfileTextField(label = "Phone Number", value = phoneNumber, keyboardType = KeyboardType.Phone) { phoneNumber = it }
-            ProfileTextField(label = "Password", value = password, keyboardType = KeyboardType.Password) { password = it }
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(16.dp))
+                // Input Fields
+                ProfileTextField(label = "Full Name", value = fullName) { fullName = it }
+                ProfileTextField(label = "Email Address", value = email) { email = it }
+                ProfileTextField(label = "Phone Number", value = phoneNumber, keyboardType = KeyboardType.Phone) { phoneNumber = it }
+                ProfileTextField(label = "Password", value = password, keyboardType = KeyboardType.Password) { password = it }
 
-            Button(
-                onClick = {
-                    val userId = auth.currentUser?.uid
-                    if (userId != null) {
-                        val updates = mapOf(
-                            "fullName" to fullName,
-                            "email" to email,
-                            "phoneNumber" to phoneNumber
-                        )
-                        firestore.collection("users").document(userId)
-                            .update(updates)
-                            .addOnSuccessListener {
-                                successMessage = "Profile updated successfully"
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Update Button
+                Image(
+                    painter = painterResource(id = R.drawable.update_button),
+                    contentDescription = "Update Button",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            val userId = auth.currentUser?.uid
+                            if (userId != null) {
+                                val updates = mapOf(
+                                    "fullName" to fullName,
+                                    "email" to email,
+                                    "phoneNumber" to phoneNumber
+                                )
+                                firestore.collection("users").document(userId)
+                                    .update(updates)
+                                    .addOnSuccessListener {
+                                        successMessage = "Profile updated successfully"
+                                    }
+                                    .addOnFailureListener { exception ->
+                                        errorMessage = exception.localizedMessage ?: "Error updating profile"
+                                    }
                             }
-                            .addOnFailureListener { exception ->
-                                errorMessage = exception.localizedMessage ?: "Error updating profile"
-                            }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Update", fontSize = 16.sp)
-            }
+                        }
+                )
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            successMessage?.let {
-                Text(it, color = Color.Green)
-            }
+                successMessage?.let {
+                    Text(it, color = Color.Green)
+                }
 
-            errorMessage?.let {
-                Text(it, color = MaterialTheme.colorScheme.error)
+                errorMessage?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error)
+                }
+
+                // Navigation Buttons
+                Spacer(modifier = Modifier.height(32.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.geri),
+                        contentDescription = "Back Button",
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Image(
+                        painter = painterResource(id = R.drawable.ileri),
+                        contentDescription = "Forward Button",
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
             }
         }
     }
 }
+
 
 @Composable
 fun ProfileTextField(
