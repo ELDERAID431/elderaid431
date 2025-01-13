@@ -174,6 +174,8 @@ fun VolunteerOffersScreen(
                             painter = painterResource(id = R.drawable.line_8),
                             contentDescription = "Separator Line",
                             modifier = Modifier.fillMaxWidth()
+                                .height(2.dp)
+                                .size(32.dp)
                         )
                     }
                 }
