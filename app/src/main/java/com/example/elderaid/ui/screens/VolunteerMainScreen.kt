@@ -1,5 +1,6 @@
 package com.example.elderaid.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -7,21 +8,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.elderaid.R
-import com.example.elderaid.ui.components.HelpRequestCard
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.*
-
-val balooDa = FontFamily(Font(R.font.baloo_da))
-val balooPaaji2 = FontFamily(Font(R.font.baloo_paaji2))
 
 @Composable
 fun VolunteerMainScreen(
@@ -36,22 +31,6 @@ fun VolunteerMainScreen(
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var requestSentMessage by remember { mutableStateOf<String?>(null) }
-    var selectedTask by remember { mutableStateOf<Map<String, Any>?>(null) }
-    var username by remember { mutableStateOf("Volunteer") }
-
-    // Fetch the logged-in user's display name dynamically
-    LaunchedEffect(Unit) {
-        val userId = auth.currentUser?.uid
-        if (userId != null) {
-            firestore.collection("users").document(userId).get()
-                .addOnSuccessListener { document ->
-                    username = document.getString("fullName") ?: "Volunteer"
-                }
-                .addOnFailureListener {
-                    username = "Volunteer"
-                }
-        }
-    }
 
     // Fetch tasks and resolve creator names
     LaunchedEffect(Unit) {
@@ -96,35 +75,17 @@ fun VolunteerMainScreen(
         ) {
             Column {
                 Text(
-                    text = "Hello, $username!",
-                    style = MaterialTheme.typography.headlineMedium.copy(fontFamily = balooDa),
-                    fontSize = 24.sp
+                    text = "Hello, ${auth.currentUser?.displayName ?: "Volunteer"}!",
+                    style = MaterialTheme.typography.headlineMedium
                 )
-                Text(
-                    text = "Have a nice day!",
-                    color = Color.Gray,
-                    fontSize = 16.sp
-                )
+                Text(text = "Have a nice day!", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
             }
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            IconButton(onClick = onProfileClick) {
                 Icon(
                     painter = painterResource(id = R.drawable.profile),
-                    contentDescription = "Profile Icon",
+                    contentDescription = "Edit Profile",
                     modifier = Modifier.size(48.dp)
                 )
-                Button(
-                    onClick = onProfileClick,
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) {
-                    Text(
-                        text = "Edit Profile",
-                        fontFamily = balooPaaji2,
-                        fontSize = 16.sp
-                    )
-                }
             }
         }
 
@@ -146,7 +107,7 @@ fun VolunteerMainScreen(
         } else if (errorMessage != null) {
             Text(text = "Error: $errorMessage", color = MaterialTheme.colorScheme.error)
         } else {
-            LazyColumn {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 items(tasks) { task ->
                     val creatorName = task["creatorName"] as? String ?: "Unknown"
                     val location = task["location"] as? String ?: "No Location"
@@ -157,34 +118,80 @@ fun VolunteerMainScreen(
                     val locationShort = location.split(", ").lastOrNull() ?: location
                     val time = "${formatTime(startTime)} - ${formatTime(endTime)}"
 
-                    HelpRequestCard(
-                        title = "$creatorName ($locationShort)",
-                        location = locationShort,
-                        time = time,
-                        category = category,
-                        onAccept = {
-                            val volunteerId = auth.currentUser?.uid
-                            if (volunteerId != null) {
-                                acceptTask(
-                                    firestore = firestore,
-                                    taskId = task["id"] as String,
-                                    volunteerId = volunteerId,
-                                    onSuccess = {
-                                        requestSentMessage = "Request Sent Successfully!"
-                                    },
-                                    onFailure = {
-                                        requestSentMessage = "Failed to Send Request"
-                                    }
+                    Column {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "$creatorName ($locationShort)",
+                                    fontSize = 16.sp,
+                                    color = MaterialTheme.colorScheme.onBackground
                                 )
-                            } else {
-                                requestSentMessage = "User not logged in."
+                                Text(
+                                    text = time,
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                                )
+                                Text(
+                                    text = category,
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                                )
                             }
-                        },
-                        onReject = {
-                            requestSentMessage = "Task Rejected"
-                        },
-                        onClick = { selectedTask = task } // Show task details in a dialog
-                    )
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                IconButton(
+                                    onClick = {
+                                        val volunteerId = auth.currentUser?.uid
+                                        if (volunteerId != null) {
+                                            acceptTask(
+                                                firestore = firestore,
+                                                taskId = task["id"] as String,
+                                                volunteerId = volunteerId,
+                                                onSuccess = {
+                                                    requestSentMessage = "Request Sent Successfully!"
+                                                },
+                                                onFailure = {
+                                                    requestSentMessage = "Failed to Send Request"
+                                                }
+                                            )
+                                        } else {
+                                            requestSentMessage = "User not logged in."
+                                        }
+                                    },
+                                    modifier = Modifier.size(48.dp)
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.accept),
+                                        contentDescription = "Accept Task"
+                                    )
+                                }
+                                IconButton(
+                                    onClick = {
+                                        requestSentMessage = "Task Rejected"
+                                    },
+                                    modifier = Modifier.size(48.dp)
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.reject),
+                                        contentDescription = "Reject Task"
+                                    )
+                                }
+                            }
+                        }
+                        Image(
+                            painter = painterResource(id = R.drawable.line_8),
+                            contentDescription = "Divider",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(2.dp)
+                                .size(32.dp)
+                        )
+                    }
                 }
             }
         }
@@ -197,61 +204,33 @@ fun VolunteerMainScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
         ) {
-            Text(text = "SOS", fontSize = 16.sp, color = Color.Red)
+            Text(text = "SOS", fontSize = 16.sp, color = MaterialTheme.colorScheme.onError)
         }
-    }
-
-    // Show Task Details Dialog
-    selectedTask?.let { task ->
-        TaskDetailsDialog(
-            task = task,
-            onDismiss = { selectedTask = null }
-        )
     }
 }
 
-// Task Details Dialog
-@Composable
-fun TaskDetailsDialog(task: Map<String, Any>, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            Button(onClick = onDismiss) {
-                Text("Close")
-            }
-        },
-        title = {
-            Text(text = "Task Details")
-        },
-        text = {
-            Column {
-                Text(text = "Title: ${task["title"] ?: "No Title"}")
-                Text(text = "Location: ${task["location"] ?: "No Location"}")
-                Text(text = "Category: ${task["category"] ?: "No Category"}")
-                Text(text = "Description: ${task["description"] ?: "No Description"}")
-            }
+// Function to accept a task
+fun acceptTask(
+    firestore: FirebaseFirestore,
+    taskId: String,
+    volunteerId: String,
+    onSuccess: () -> Unit,
+    onFailure: (Exception) -> Unit
+) {
+    val taskRef = firestore.collection("help_requests").document(taskId)
+    taskRef.update("acceptedVolunteers", FieldValue.arrayUnion(volunteerId))
+        .addOnSuccessListener {
+            onSuccess()
         }
-    )
+        .addOnFailureListener { exception ->
+            onFailure(exception)
+        }
 }
 
 // Function to format time
 fun formatTime(timestamp: Long): String {
     val formatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
     return formatter.format(Date(timestamp))
-}
-
-// Function to accept task
-fun acceptTask(
-    firestore: FirebaseFirestore,
-    taskId: String,
-    volunteerId: String,
-    onSuccess: () -> Unit,
-    onFailure: () -> Unit
-) {
-    val taskRef = firestore.collection("help_requests").document(taskId)
-    taskRef.update("volunteerId", volunteerId)
-        .addOnSuccessListener { onSuccess() }
-        .addOnFailureListener { onFailure() }
 }
