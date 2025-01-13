@@ -58,6 +58,11 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
                     navController.navigate("login") {
                         popUpTo("signup") { inclusive = true }
                     }
+                },
+                onBack = {
+                    navController.navigate("login") {
+                        popUpTo("signup") { inclusive = true }
+                    }
                 }
             )
         }

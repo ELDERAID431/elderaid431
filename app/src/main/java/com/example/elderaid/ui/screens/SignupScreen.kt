@@ -1,10 +1,19 @@
 package com.example.elderaid.ui.screens
 
+import android.content.Context
+import android.net.Uri
 import android.widget.Toast
-import androidx.compose.foundation.*
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
@@ -13,28 +22,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.font.FontWeight
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.rememberAsyncImagePainter
 import com.example.elderaid.R
 import com.example.elderaid.ui.viewmodel.SignupViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
-import android.content.Context
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import coil.compose.rememberAsyncImagePainter
-import kotlinx.coroutines.launch
 import com.example.elderaid.ui.viewmodel.User
-
+import kotlinx.coroutines.launch
 
 @Composable
-fun SignupScreen(viewModel: SignupViewModel = viewModel(), onSignupSuccess: () -> Unit) {
+fun SignupScreen(
+    viewModel: SignupViewModel = viewModel(),
+    onSignupSuccess: () -> Unit,
+    onBack: () -> Unit
+) {
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
@@ -47,7 +54,7 @@ fun SignupScreen(viewModel: SignupViewModel = viewModel(), onSignupSuccess: () -
     var successMessage by remember { mutableStateOf<String?>(null) }
 
     val coroutineScope = rememberCoroutineScope()
-    val context = LocalContext.current
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
@@ -130,32 +137,49 @@ fun SignupScreen(viewModel: SignupViewModel = viewModel(), onSignupSuccess: () -
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Sign Up Button
-                Button(
-                    onClick = {
-                        if (photoUrl.isNullOrEmpty()) {
-                            errorMessage = "Please upload a profile picture"
-                            return@Button
-                        }
-                        val user = User(
-                            fullName = fullName,
-                            email = email,
-                            phoneNumber = phoneNumber,
-                            age = age,
-                            location = location,
-                            role = selectedRole,
-                            photoUrl = photoUrl ?: ""
-                        )
-                        viewModel.signup(user, password,
-                            onSuccess = { onSignupSuccess() },
-                            onFailure = { error ->
-                                Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
-                            }
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(0.5f)
+                // Navigation Buttons
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Sign Up", fontSize = 14.sp)
+                    // Back Button (geri.png)
+                    Image(
+                        painter = painterResource(id = R.drawable.geri),
+                        contentDescription = "Back",
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clickable { onBack() }
+                    )
+                    // Submit Button (ileri.png)
+                    Image(
+                        painter = painterResource(id = R.drawable.ileri),
+                        contentDescription = "Submit",
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clickable {
+                                if (photoUrl.isNullOrEmpty()) {
+                                    errorMessage = "Please upload a profile picture"
+                                    return@clickable
+                                }
+                                val user = User(
+                                    fullName = fullName,
+                                    email = email,
+                                    phoneNumber = phoneNumber,
+                                    age = age,
+                                    location = location,
+                                    role = selectedRole,
+                                    photoUrl = photoUrl ?: ""
+                                )
+                                viewModel.signup(user, password,
+                                    onSuccess = { onSignupSuccess() },
+                                    onFailure = { error ->
+                                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                                    }
+                                )
+                            }
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -171,9 +195,6 @@ fun SignupScreen(viewModel: SignupViewModel = viewModel(), onSignupSuccess: () -
         }
     }
 }
-
-
-
 
 @Composable
 fun SignupTextFieldWithLine(
