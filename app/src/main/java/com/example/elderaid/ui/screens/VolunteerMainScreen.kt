@@ -1,6 +1,7 @@
 package com.example.elderaid.ui.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -31,6 +32,7 @@ fun VolunteerMainScreen(
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var requestSentMessage by remember { mutableStateOf<String?>(null) }
+    var selectedTask by remember { mutableStateOf<Map<String, Any>?>(null) } // For showing task details
 
     // Fetch tasks and resolve creator names
     LaunchedEffect(Unit) {
@@ -122,7 +124,8 @@ fun VolunteerMainScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp),
+                                .padding(vertical = 8.dp)
+                                .clickable { selectedTask = task },
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -207,6 +210,30 @@ fun VolunteerMainScreen(
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
         ) {
             Text(text = "SOS", fontSize = 16.sp, color = MaterialTheme.colorScheme.onError)
+        }
+
+        // Task Details Dialog
+        selectedTask?.let { task ->
+            AlertDialog(
+                onDismissRequest = { selectedTask = null },
+                title = {
+                    Text(text = "Task Details")
+                },
+                text = {
+                    Column {
+                        Text("Creator: ${task["creatorName"] as? String ?: "Unknown"}")
+                        Text("Location: ${task["location"] as? String ?: "No Location"}")
+                        Text("Category: ${task["category"] as? String ?: "No Category"}")
+                        Text("Start Time: ${formatTime(task["startTime"] as? Long ?: 0L)}")
+                        Text("End Time: ${formatTime(task["endTime"] as? Long ?: 0L)}")
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { selectedTask = null }) {
+                        Text("Close")
+                    }
+                }
+            )
         }
     }
 }
