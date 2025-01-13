@@ -111,9 +111,16 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
             VolunteerMainScreen(
                 onTaskClick = { task ->
                     println("Clicked on task: $task")
+                },
+                onProfileClick = {
+                    navController.navigate("profile")
+                },
+                onSOSClick = {
+                    navController.navigate("sos")
                 }
             )
         }
+
 
         // New Help Request Screen
         composable("newHelpRequest") {
