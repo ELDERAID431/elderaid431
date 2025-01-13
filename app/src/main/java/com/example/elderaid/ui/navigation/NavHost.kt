@@ -1,6 +1,5 @@
 package com.example.elderaid.ui.navigation
 
-import ElderMainScreen
 import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -33,8 +32,9 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
                             .get()
                             .addOnSuccessListener { document ->
                                 val role = document.getString("role")
+                                val userName = document.getString("fullName") ?: "User"
                                 when (role) {
-                                    "Elder" -> navController.navigate("elderMain") {
+                                    "Elder" -> navController.navigate("elderMain/$userName") {
                                         popUpTo("login") { inclusive = true }
                                     }
                                     "Volunteer" -> navController.navigate("volunteerMain") {
@@ -63,7 +63,8 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
         }
 
         // Elder Main Screen
-        composable("elderMain") {
+        composable("elderMain/{userName}") { backStackEntry ->
+            val userName = backStackEntry.arguments?.getString("userName") ?: "Elder"
             val viewModel: ElderMainViewModel = viewModel()
             var previousRequests by remember { mutableStateOf(listOf<Map<String, Any>>()) }
             var isLoading by remember { mutableStateOf(false) }
@@ -85,16 +86,14 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
             }
 
             ElderMainScreen(
+                userName = userName,
                 previousRequests = previousRequests,
                 isLoading = isLoading,
                 errorMessage = errorMessage,
                 onNewRequestClick = { navController.navigate("newHelpRequest") },
-                onViewApplicantsClick = { requestId ->
-                    println("View applicants for request ID: $requestId")
-                },
+                onVolunteerOffersClick = { navController.navigate("volunteerOffers") },
                 onProfileClick = { navController.navigate("profile") },
-                onSOSClick = { navController.navigate("sos") },
-                onVolunteerOffersClick = { navController.navigate("volunteerOffers") }
+                onSOSClick = { navController.navigate("sos") }
             )
         }
 
