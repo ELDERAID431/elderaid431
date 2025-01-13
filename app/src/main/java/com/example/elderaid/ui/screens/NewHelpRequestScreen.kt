@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -106,104 +107,123 @@ fun NewHelpRequestScreen(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("New Help Request", style = MaterialTheme.typography.headlineMedium)
+        Text("New Task", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Color.Black)
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // Title input
-        Text("Title", fontSize = 16.sp)
+        Text("Title", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
         TextField(
             value = title,
             onValueChange = { title = it },
             placeholder = { Text("Enter title") },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White, RoundedCornerShape(8.dp))
+                .padding(8.dp),
             singleLine = true
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Date and Location
+        // Date and Location Section
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
-                Text("Date", fontSize = 16.sp)
-                Button(onClick = {
-                    val calendar = Calendar.getInstance()
-                    DatePickerDialog(
-                        context,
-                        { _, year, month, dayOfMonth ->
-                            calendar.set(year, month, dayOfMonth)
-                            date = calendar.time
-                        },
-                        calendar.get(Calendar.YEAR),
-                        calendar.get(Calendar.MONTH),
-                        calendar.get(Calendar.DAY_OF_MONTH)
-                    ).show()
-                }) {
-                    Text(date?.let { dateFormatter.format(it) } ?: "Select Date")
+                Text("Date", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Button(
+                    onClick = {
+                        val calendar = Calendar.getInstance()
+                        DatePickerDialog(
+                            context,
+                            { _, year, month, dayOfMonth ->
+                                calendar.set(year, month, dayOfMonth)
+                                date = calendar.time
+                            },
+                            calendar.get(Calendar.YEAR),
+                            calendar.get(Calendar.MONTH),
+                            calendar.get(Calendar.DAY_OF_MONTH)
+                        ).show()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = date?.let { dateFormatter.format(it) } ?: "Select Date", color = Color.White)
                 }
             }
 
             Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
-                Text("Location", fontSize = 16.sp)
-                Button(onClick = {
-                    if (ContextCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.ACCESS_FINE_LOCATION
-                        ) == PackageManager.PERMISSION_GRANTED
-                    ) {
-                        fetchCurrentLocation(context) { fetchedLocation ->
-                            location = fetchedLocation
+                Text("Location", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Button(
+                    onClick = {
+                        if (ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.ACCESS_FINE_LOCATION
+                            ) == PackageManager.PERMISSION_GRANTED
+                        ) {
+                            fetchCurrentLocation(context) { fetchedLocation ->
+                                location = fetchedLocation
+                            }
+                        } else {
+                            permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                         }
-                    } else {
-                        permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-                    }
-                }) {
-                    Text(if (location.isBlank()) "Fetch Location" else location)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = if (location.isBlank()) "Fetch Location" else location, color = Color.White)
                 }
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Start and End Time
+        // Start and End Time Section
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
-                Text("Start Time", fontSize = 16.sp)
-                Button(onClick = {
-                    val calendar = Calendar.getInstance()
-                    TimePickerDialog(
-                        context,
-                        { _, hourOfDay, minute ->
-                            calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
-                            calendar.set(Calendar.MINUTE, minute)
-                            startTime = calendar.time
-                        },
-                        calendar.get(Calendar.HOUR_OF_DAY),
-                        calendar.get(Calendar.MINUTE),
-                        false
-                    ).show()
-                }) {
-                    Text(startTime?.let { timeFormatter.format(it) } ?: "Select Start Time")
+                Text("Start Time", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Button(
+                    onClick = {
+                        val calendar = Calendar.getInstance()
+                        TimePickerDialog(
+                            context,
+                            { _, hourOfDay, minute ->
+                                calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                                calendar.set(Calendar.MINUTE, minute)
+                                startTime = calendar.time
+                            },
+                            calendar.get(Calendar.HOUR_OF_DAY),
+                            calendar.get(Calendar.MINUTE),
+                            false
+                        ).show()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = startTime?.let { timeFormatter.format(it) } ?: "Select Start Time", color = Color.White)
                 }
             }
 
             Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
-                Text("End Time", fontSize = 16.sp)
-                Button(onClick = {
-                    val calendar = Calendar.getInstance()
-                    TimePickerDialog(
-                        context,
-                        { _, hourOfDay, minute ->
-                            calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
-                            calendar.set(Calendar.MINUTE, minute)
-                            endTime = calendar.time
-                        },
-                        calendar.get(Calendar.HOUR_OF_DAY),
-                        calendar.get(Calendar.MINUTE),
-                        false
-                    ).show()
-                }) {
-                    Text(endTime?.let { timeFormatter.format(it) } ?: "Select End Time")
+                Text("End Time", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Button(
+                    onClick = {
+                        val calendar = Calendar.getInstance()
+                        TimePickerDialog(
+                            context,
+                            { _, hourOfDay, minute ->
+                                calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                                calendar.set(Calendar.MINUTE, minute)
+                                endTime = calendar.time
+                            },
+                            calendar.get(Calendar.HOUR_OF_DAY),
+                            calendar.get(Calendar.MINUTE),
+                            false
+                        ).show()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = endTime?.let { timeFormatter.format(it) } ?: "Select End Time", color = Color.White)
                 }
             }
         }
@@ -211,19 +231,23 @@ fun NewHelpRequestScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Description
-        Text("Description", fontSize = 16.sp)
+        Text("Description", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
         TextField(
             value = description,
             onValueChange = { description = it },
             placeholder = { Text("Enter description") },
-            modifier = Modifier.fillMaxWidth().height(80.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(80.dp)
+                .background(Color.White, RoundedCornerShape(8.dp))
+                .padding(8.dp),
             singleLine = false
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Category
-        Text("Category", fontSize = 16.sp)
+        // Category Section
+        Text("Category", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
         val categories = listOf(
             "Home shopping", "Coffee and tea time", "Pharmacy", "House cleaning",
             "Brain exercises", "Chatting", "Walks", "Food provision"
@@ -264,7 +288,7 @@ fun NewHelpRequestScreen(
                         "category" to category,
                         "creatorId" to userId,
                         "creatorRole" to "elder",
-                        "acceptedVolunteers" to emptyList<String>(), // Initialize as empty list
+                        "acceptedVolunteers" to emptyList<String>(),
                         "timestamp" to com.google.firebase.Timestamp.now()
                     )
                     isLoading = true
@@ -282,9 +306,10 @@ fun NewHelpRequestScreen(
                     errorMessage = "All fields are required."
                 }
             },
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Submit")
+            Text("Submit", color = Color.White)
         }
 
         if (isLoading) {
@@ -302,10 +327,10 @@ fun NewHelpRequestScreen(
         // Back Button
         Button(
             onClick = { onCancel() },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Back to Main Screen")
+            Text("Back to Main Screen", color = Color.White)
         }
     }
 }
