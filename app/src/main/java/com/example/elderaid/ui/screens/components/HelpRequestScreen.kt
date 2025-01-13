@@ -1,11 +1,8 @@
 package com.example.elderaid.ui.components
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,47 +18,61 @@ fun HelpRequestCard(
     location: String,
     time: String,
     category: String,
-    onClick: () -> Unit,
     onAccept: () -> Unit,
-    onReject: () -> Unit
+    onReject: () -> Unit,
+    onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(4.dp)
+            .padding(8.dp)
             .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = title, fontSize = 18.sp, color = Color.Black)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = location, fontSize = 14.sp, color = Color.Gray)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = time, fontSize = 14.sp, color = Color.Gray)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = category, fontSize = 14.sp, color = Color.Black)
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Sol taraf: Metinler
+            Column(
+                modifier = Modifier.weight(1f)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.accept),
-                    contentDescription = "Accept",
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clickable { onAccept() }
-                )
-                Image(
-                    painter = painterResource(id = R.drawable.reject),
-                    contentDescription = "Reject",
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clickable { onReject() }
-                )
+                Text(text = title, fontSize = 16.sp, color = Color.Black)
+                Text(text = location, fontSize = 14.sp, color = Color.Gray)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = time, fontSize = 14.sp, color = Color.Black)
+                Text(text = category, fontSize = 14.sp, color = Color.Gray)
+            }
+
+            // Sağ taraf: Butonlar
+            Row(
+                modifier = Modifier.wrapContentWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = onAccept,
+                    modifier = Modifier.size(40.dp) // Buton boyutunu arttırdık
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.accept),
+                        contentDescription = "Accept",
+                        tint = Color.Green
+                    )
+                }
+                IconButton(
+                    onClick = onReject,
+                    modifier = Modifier.size(40.dp) // Buton boyutunu arttırdık
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.reject),
+                        contentDescription = "Reject",
+                        tint = Color.Red
+                    )
+                }
             }
         }
     }

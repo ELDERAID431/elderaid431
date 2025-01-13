@@ -24,6 +24,7 @@ fun VolunteerMainScreen(
     onTaskClick: (Map<String, Any>) -> Unit,
     onProfileClick: () -> Unit,
     onSOSClick: () -> Unit
+
 ) {
     val auth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
@@ -32,8 +33,9 @@ fun VolunteerMainScreen(
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var requestSentMessage by remember { mutableStateOf<String?>(null) }
+    var selectedTask by remember { mutableStateOf<Map<String, Any>?>(null) } // For showing task details
 
-    // Fetch tasks from Firestore and resolve creator names
+    // Fetch tasks and resolve creator names
     LaunchedEffect(Unit) {
         isLoading = true
         firestore.collection("help_requests")
@@ -41,11 +43,10 @@ fun VolunteerMainScreen(
             .addOnSuccessListener { querySnapshot ->
                 val fetchedTasks = querySnapshot.documents.mapNotNull { doc ->
                     val data = doc.data
-                    data?.put("id", doc.id) // Add the document ID for later use
+                    data?.put("id", doc.id)
                     data
                 }
 
-                // Fetch creator names for each task
                 fetchedTasks.forEach { task ->
                     val creatorId = task["creatorId"] as? String
                     if (creatorId != null) {
@@ -53,7 +54,7 @@ fun VolunteerMainScreen(
                             .addOnSuccessListener { userDoc ->
                                 val creatorName = userDoc.getString("fullName") ?: "Unknown"
                                 task["creatorName"] = creatorName
-                                tasks = fetchedTasks // Update tasks after fetching creator names
+                                tasks = fetchedTasks
                             }
                             .addOnFailureListener { exception ->
                                 errorMessage = "Failed to fetch creator name: ${exception.localizedMessage}"
@@ -69,7 +70,7 @@ fun VolunteerMainScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        // Top section with greeting and profile
+        // Greeting and Profile
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -93,7 +94,7 @@ fun VolunteerMainScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Show "Request Sent" message
+        // Request Sent Message
         requestSentMessage?.let {
             Text(
                 text = it,
@@ -103,7 +104,7 @@ fun VolunteerMainScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Show loading or error messages
+        // Task List or Loading/Error
         if (isLoading) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
         } else if (errorMessage != null) {
@@ -121,7 +122,7 @@ fun VolunteerMainScreen(
                     val time = "${formatTime(startTime)} - ${formatTime(endTime)}"
 
                     HelpRequestCard(
-                        title = creatorName,
+                        title = "$creatorName ($locationShort)",
                         location = locationShort,
                         time = time,
                         category = category,
@@ -146,7 +147,7 @@ fun VolunteerMainScreen(
                         onReject = {
                             requestSentMessage = "Task Rejected"
                         },
-                        onClick = { onTaskClick(task) }
+                        onClick = { selectedTask = task } // Show task details in a dialog
                     )
                 }
             }
@@ -157,12 +158,46 @@ fun VolunteerMainScreen(
         // SOS Button
         Button(
             onClick = onSOSClick,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color.White)
         ) {
-            Text("SOS", fontSize = 16.sp)
+            Text(text = "SOS", fontSize = 16.sp, color = Color.Red)
         }
     }
+
+    // Show Task Details Dialog
+    selectedTask?.let { task ->
+        TaskDetailsDialog(
+            task = task,
+            onDismiss = { selectedTask = null }
+        )
+    }
+}
+
+// Task Details Dialog
+@Composable
+fun TaskDetailsDialog(task: Map<String, Any>, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text("Close")
+            }
+        },
+        title = {
+            Text(text = "Task Details")
+        },
+        text = {
+            Column {
+                Text(text = "Title: ${task["title"] ?: "No Title"}")
+                Text(text = "Location: ${task["location"] ?: "No Location"}")
+                Text(text = "Category: ${task["category"] ?: "No Category"}")
+                Text(text = "Description: ${task["description"] ?: "No Description"}")
+            }
+        }
+    )
 }
 
 // Function to accept a task
