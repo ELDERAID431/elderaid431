@@ -36,7 +36,7 @@ fun VolunteerOffersScreen(
     var selectedVolunteerInfo by remember { mutableStateOf<Map<String, String>?>(null) }
     val currentUserId = auth.currentUser?.uid
 
-    // Fetch offers with accepted volunteers and resolve volunteer names
+    // Fetch offers with accepted volunteers and resolve all volunteer names
     LaunchedEffect(Unit) {
         if (currentUserId != null) {
             firestore.collection("help_requests")
@@ -48,18 +48,18 @@ fun VolunteerOffersScreen(
                         val acceptedVolunteers = data?.get("acceptedVolunteers") as? List<String>
                         if (!acceptedVolunteers.isNullOrEmpty()) {
                             data["id"] = doc.id
+                            data["volunteerNames"] = mutableMapOf<String, String>() // Map volunteerId to names
                             data
                         } else null
                     }
 
                     fetchedOffers.forEach { offer ->
-                        val acceptedVolunteers = offer["acceptedVolunteers"] as? List<String>
-                        if (!acceptedVolunteers.isNullOrEmpty()) {
-                            val volunteerId = acceptedVolunteers.first()
+                        val acceptedVolunteers = offer["acceptedVolunteers"] as? List<String> ?: emptyList()
+                        acceptedVolunteers.forEach { volunteerId ->
                             firestore.collection("users").document(volunteerId).get()
                                 .addOnSuccessListener { volunteerDoc ->
                                     val volunteerName = volunteerDoc.getString("fullName") ?: "Unknown Volunteer"
-                                    offer["volunteerName"] = volunteerName
+                                    (offer["volunteerNames"] as MutableMap<String, String>)[volunteerId] = volunteerName
                                     offers = offers.map { o -> if (o["id"] == offer["id"]) offer else o }
                                 }
                         }
@@ -117,6 +117,9 @@ fun VolunteerOffersScreen(
                 items(offers) { offer ->
                     val acceptedVolunteers = offer["acceptedVolunteers"] as? List<String> ?: emptyList()
                     acceptedVolunteers.forEach { volunteerId ->
+                        val volunteerNames = offer["volunteerNames"] as? Map<String, String>
+                        val volunteerName = volunteerNames?.get(volunteerId) ?: "Unknown Volunteer"
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -126,7 +129,7 @@ fun VolunteerOffersScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = offer["volunteerName"] as? String ?: "Unknown Volunteer",
+                                    text = volunteerName,
                                     fontSize = 16.sp
                                 )
                                 Text(
@@ -171,8 +174,6 @@ fun VolunteerOffersScreen(
                             painter = painterResource(id = R.drawable.line_8),
                             contentDescription = "Separator Line",
                             modifier = Modifier.fillMaxWidth()
-                                .height(2.dp)
-                                .size(32.dp)
                         )
                     }
                 }
