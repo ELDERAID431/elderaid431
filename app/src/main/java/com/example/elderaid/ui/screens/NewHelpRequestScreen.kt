@@ -253,110 +253,131 @@ fun NewHelpRequestScreen(
 
         // Category Section
         Text("Category", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            Image(
-                painter = painterResource(id = R.drawable.homeshopping),
-                contentDescription = "Home Shopping",
-                modifier = Modifier
-                    .size(64.dp)
-                    .clickable { category = "homeshopping" }
-            )
-            Image(
-                painter = painterResource(id = R.drawable.coffeandteatime),
-                contentDescription = "Coffee and Tea Time",
-                modifier = Modifier
-                    .size(64.dp)
-                    .clickable { category = "coffeandteatime" }
-            )
-            Image(
-                painter = painterResource(id = R.drawable.pharmacy),
-                contentDescription = "Pharmacy",
-                modifier = Modifier
-                    .size(64.dp)
-                    .clickable { category = "pharmacy" }
-            )
-            Image(
-                painter = painterResource(id = R.drawable.housecleaning),
-                contentDescription = "House Cleaning",
-                modifier = Modifier
-                    .size(64.dp)
-                    .clickable { category = "housecleaning" }
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            Image(
-                painter = painterResource(id = R.drawable.brainexercises),
-                contentDescription = "Brain Exercises",
-                modifier = Modifier
-                    .size(64.dp)
-                    .clickable { category = "braineexercises" }
-            )
-            Image(
-                painter = painterResource(id = R.drawable.chatting),
-                contentDescription = "Chatting",
-                modifier = Modifier
-                    .size(64.dp)
-                    .clickable { category = "chatting" }
-            )
-            Image(
-                painter = painterResource(id = R.drawable.walks),
-                contentDescription = "Walks",
-                modifier = Modifier
-                    .size(64.dp)
-                    .clickable { category = "walks" }
-            )
-            Image(
-                painter = painterResource(id = R.drawable.foodprovision),
-                contentDescription = "Food Provision",
-                modifier = Modifier
-                    .size(64.dp)
-                    .clickable { category = "foodprovision" }
-            )
+        Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                Image(
+                    painter = painterResource(id = R.drawable.homeshopping),
+                    contentDescription = "Home Shopping",
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clickable { category = "homeshopping" }
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.coffeandteatime),
+                    contentDescription = "Coffee and Tea Time",
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clickable { category = "coffeandteatime" }
+                )
+            }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                Image(
+                    painter = painterResource(id = R.drawable.pharmacy),
+                    contentDescription = "Pharmacy",
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clickable { category = "pharmacy" }
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.housecleaning),
+                    contentDescription = "House Cleaning",
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clickable { category = "housecleaning" }
+                )
+            }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                Image(
+                    painter = painterResource(id = R.drawable.brainexercises),
+                    contentDescription = "Brain Exercises",
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clickable { category = "braineexercises" }
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.chatting),
+                    contentDescription = "Chatting",
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clickable { category = "chatting" }
+                )
+            }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                Image(
+                    painter = painterResource(id = R.drawable.walks),
+                    contentDescription = "Walks",
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clickable { category = "walks" }
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.foodprovision),
+                    contentDescription = "Food Provision",
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clickable { category = "foodprovision" }
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Submit Button
-        Button(
-            onClick = {
-                val userId = auth.currentUser?.uid
-                if (userId != null && title.isNotBlank() && date != null && startTime != null && endTime != null &&
-                    location.isNotBlank() && description.isNotBlank() && category.isNotBlank()
-                ) {
-                    val helpRequest = hashMapOf(
-                        "title" to title,
-                        "date" to date!!.time,
-                        "startTime" to startTime!!.time,
-                        "endTime" to endTime!!.time,
-                        "location" to location,
-                        "description" to description,
-                        "category" to category,
-                        "creatorId" to userId,
-                        "creatorRole" to "elder",
-                        "acceptedVolunteers" to emptyList<String>(),
-                        "timestamp" to Timestamp.now()
-                    )
-                    isLoading = true
-                    firestore.collection("help_requests")
-                        .add(helpRequest)
-                        .addOnSuccessListener {
-                            isLoading = false
-                            onSubmitSuccess()
-                        }
-                        .addOnFailureListener { exception ->
-                            isLoading = false
-                            errorMessage = "Failed to save request: ${exception.localizedMessage}"
-                        }
-                } else {
-                    errorMessage = "All fields are required."
-                }
-            },
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
-            modifier = Modifier.fillMaxWidth()
+        // Bottom Buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom
         ) {
-            Text("Submit", color = Color.White)
+            Image(
+                painter = painterResource(id = R.drawable.geri),
+                contentDescription = "Back",
+                modifier = Modifier
+                    .size(64.dp)
+                    .clickable { onCancel() }
+            )
+
+            Image(
+                painter = painterResource(id = R.drawable.ileri),
+                contentDescription = "Submit",
+                modifier = Modifier
+                    .size(64.dp)
+                    .clickable {
+                        val userId = auth.currentUser?.uid
+                        if (userId != null && title.isNotBlank() && date != null && startTime != null && endTime != null &&
+                            location.isNotBlank() && description.isNotBlank() && category.isNotBlank()
+                        ) {
+                            val helpRequest = hashMapOf(
+                                "title" to title,
+                                "date" to date!!.time,
+                                "startTime" to startTime!!.time,
+                                "endTime" to endTime!!.time,
+                                "location" to location,
+                                "description" to description,
+                                "category" to category,
+                                "creatorId" to userId,
+                                "creatorRole" to "elder",
+                                "acceptedVolunteers" to emptyList<String>(),
+                                "timestamp" to Timestamp.now()
+                            )
+                            isLoading = true
+                            firestore.collection("help_requests")
+                                .add(helpRequest)
+                                .addOnSuccessListener {
+                                    isLoading = false
+                                    onSubmitSuccess()
+                                }
+                                .addOnFailureListener { exception ->
+                                    isLoading = false
+                                    errorMessage = "Failed to save request: ${exception.localizedMessage}"
+                                }
+                        } else {
+                            errorMessage = "All fields are required."
+                        }
+                    }
+            )
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         if (isLoading) {
             Spacer(modifier = Modifier.height(16.dp))
@@ -366,17 +387,6 @@ fun NewHelpRequestScreen(
         errorMessage?.let {
             Spacer(modifier = Modifier.height(8.dp))
             Text(it, color = MaterialTheme.colorScheme.error)
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Back Button
-        Button(
-            onClick = { onCancel() },
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Back to Main Screen", color = Color.White)
         }
     }
 }
