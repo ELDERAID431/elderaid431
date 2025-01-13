@@ -10,21 +10,27 @@ import android.location.Geocoder
 import android.location.Location
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import com.example.elderaid.R
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
@@ -105,24 +111,14 @@ fun NewHelpRequestScreen(
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
             .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.Start
     ) {
         Text("New Task", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Color.Black)
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // Title input
-        Text("Title", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-        TextField(
-            value = title,
-            onValueChange = { title = it },
-            placeholder = { Text("Enter title") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.White, RoundedCornerShape(8.dp))
-                .padding(8.dp),
-            singleLine = true
-        )
+        CustomTextFieldWithLine(label = "Title", value = title) { title = it }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -130,6 +126,11 @@ fun NewHelpRequestScreen(
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                 Text("Date", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Image(
+                    painter = painterResource(id = R.drawable.line_3),
+                    contentDescription = null,
+                    modifier = Modifier.align(Alignment.Start).fillMaxWidth(0.8f)
+                )
                 Button(
                     onClick = {
                         val calendar = Calendar.getInstance()
@@ -144,15 +145,20 @@ fun NewHelpRequestScreen(
                             calendar.get(Calendar.DAY_OF_MONTH)
                         ).show()
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(text = date?.let { dateFormatter.format(it) } ?: "Select Date", color = Color.White)
+                    Text(text = date?.let { dateFormatter.format(it) } ?: "Select Date", color = Color.Black)
                 }
             }
 
             Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
                 Text("Location", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Image(
+                    painter = painterResource(id = R.drawable.line_3),
+                    contentDescription = null,
+                    modifier = Modifier.align(Alignment.Start).fillMaxWidth(0.8f)
+                )
                 Button(
                     onClick = {
                         if (ContextCompat.checkSelfPermission(
@@ -167,10 +173,10 @@ fun NewHelpRequestScreen(
                             permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(text = if (location.isBlank()) "Fetch Location" else location, color = Color.White)
+                    Text(text = if (location.isBlank()) "Fetch Location" else location, color = Color.Black)
                 }
             }
         }
@@ -181,6 +187,11 @@ fun NewHelpRequestScreen(
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                 Text("Start Time", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Image(
+                    painter = painterResource(id = R.drawable.line_3),
+                    contentDescription = null,
+                    modifier = Modifier.align(Alignment.Start).fillMaxWidth(0.8f)
+                )
                 Button(
                     onClick = {
                         val calendar = Calendar.getInstance()
@@ -196,15 +207,20 @@ fun NewHelpRequestScreen(
                             false
                         ).show()
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(text = startTime?.let { timeFormatter.format(it) } ?: "Select Start Time", color = Color.White)
+                    Text(text = startTime?.let { timeFormatter.format(it) } ?: "Select Start Time", color = Color.Black)
                 }
             }
 
             Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
                 Text("End Time", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Image(
+                    painter = painterResource(id = R.drawable.line_3),
+                    contentDescription = null,
+                    modifier = Modifier.align(Alignment.Start).fillMaxWidth(0.8f)
+                )
                 Button(
                     onClick = {
                         val calendar = Calendar.getInstance()
@@ -220,10 +236,10 @@ fun NewHelpRequestScreen(
                             false
                         ).show()
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(text = endTime?.let { timeFormatter.format(it) } ?: "Select End Time", color = Color.White)
+                    Text(text = endTime?.let { timeFormatter.format(it) } ?: "Select End Time", color = Color.Black)
                 }
             }
         }
@@ -231,42 +247,72 @@ fun NewHelpRequestScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Description
-        Text("Description", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-        TextField(
-            value = description,
-            onValueChange = { description = it },
-            placeholder = { Text("Enter description") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(80.dp)
-                .background(Color.White, RoundedCornerShape(8.dp))
-                .padding(8.dp),
-            singleLine = false
-        )
+        CustomTextFieldWithLine(label = "Description", value = description) { description = it }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // Category Section
         Text("Category", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-        val categories = listOf(
-            "Home shopping", "Coffee and tea time", "Pharmacy", "House cleaning",
-            "Brain exercises", "Chatting", "Walks", "Food provision"
-        )
-        categories.chunked(2).forEach { row ->
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                row.forEach { categoryName ->
-                    OutlinedButton(
-                        onClick = { category = categoryName },
-                        shape = RoundedCornerShape(20.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = if (category == categoryName) Color.Gray else Color.White
-                        ),
-                        modifier = Modifier.weight(1f).padding(4.dp)
-                    ) {
-                        Text(categoryName, fontSize = 12.sp)
-                    }
-                }
-            }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            Image(
+                painter = painterResource(id = R.drawable.homeshopping),
+                contentDescription = "Home Shopping",
+                modifier = Modifier
+                    .size(64.dp)
+                    .clickable { category = "homeshopping" }
+            )
+            Image(
+                painter = painterResource(id = R.drawable.coffeandteatime),
+                contentDescription = "Coffee and Tea Time",
+                modifier = Modifier
+                    .size(64.dp)
+                    .clickable { category = "coffeandteatime" }
+            )
+            Image(
+                painter = painterResource(id = R.drawable.pharmacy),
+                contentDescription = "Pharmacy",
+                modifier = Modifier
+                    .size(64.dp)
+                    .clickable { category = "pharmacy" }
+            )
+            Image(
+                painter = painterResource(id = R.drawable.housecleaning),
+                contentDescription = "House Cleaning",
+                modifier = Modifier
+                    .size(64.dp)
+                    .clickable { category = "housecleaning" }
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            Image(
+                painter = painterResource(id = R.drawable.brainexercises),
+                contentDescription = "Brain Exercises",
+                modifier = Modifier
+                    .size(64.dp)
+                    .clickable { category = "braineexercises" }
+            )
+            Image(
+                painter = painterResource(id = R.drawable.chatting),
+                contentDescription = "Chatting",
+                modifier = Modifier
+                    .size(64.dp)
+                    .clickable { category = "chatting" }
+            )
+            Image(
+                painter = painterResource(id = R.drawable.walks),
+                contentDescription = "Walks",
+                modifier = Modifier
+                    .size(64.dp)
+                    .clickable { category = "walks" }
+            )
+            Image(
+                painter = painterResource(id = R.drawable.foodprovision),
+                contentDescription = "Food Provision",
+                modifier = Modifier
+                    .size(64.dp)
+                    .clickable { category = "foodprovision" }
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -289,7 +335,7 @@ fun NewHelpRequestScreen(
                         "creatorId" to userId,
                         "creatorRole" to "elder",
                         "acceptedVolunteers" to emptyList<String>(),
-                        "timestamp" to com.google.firebase.Timestamp.now()
+                        "timestamp" to Timestamp.now()
                     )
                     isLoading = true
                     firestore.collection("help_requests")
@@ -331,6 +377,30 @@ fun NewHelpRequestScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Back to Main Screen", color = Color.White)
+        }
+    }
+}
+
+@Composable
+fun CustomTextFieldWithLine(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+        Text(label, color = Color.Gray, fontSize = 12.sp, modifier = Modifier.padding(bottom = 2.dp))
+        Box(modifier = Modifier.fillMaxWidth()) {
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.Transparent)
+                    .padding(0.dp),
+                textStyle = LocalTextStyle.current.copy(color = Color.Black)
+            )
+            Divider(color = Color.Gray, thickness = 1.dp, modifier = Modifier.align(Alignment.BottomStart))
         }
     }
 }
