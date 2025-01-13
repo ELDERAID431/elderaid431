@@ -102,6 +102,9 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
             VolunteerOffersScreen(
                 onBack = {
                     navController.popBackStack()
+                },
+                onProfileClick = {
+                    navController.navigate("profile")
                 }
             )
         }
@@ -120,7 +123,6 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
                 }
             )
         }
-
 
         // New Help Request Screen
         composable("newHelpRequest") {
