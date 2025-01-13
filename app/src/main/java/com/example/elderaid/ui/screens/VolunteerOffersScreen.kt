@@ -15,8 +15,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.elderaid.R
-import com.example.elderaid.ui.components.OfferCard
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -24,7 +24,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 @Composable
 fun VolunteerOffersScreen(
     onBack: () -> Unit,
-    onProfileClick: () -> Unit // Added parameter for Profile navigation
+    onProfileClick: () -> Unit
 ) {
     val auth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
@@ -61,7 +61,7 @@ fun VolunteerOffersScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        // Header with user's name and profile icon
+        // Header with user's name
         var userName by remember { mutableStateOf("User") }
         LaunchedEffect(Unit) {
             firestore.collection("users").document(currentUserId ?: "")
@@ -71,6 +71,7 @@ fun VolunteerOffersScreen(
                 }
         }
 
+        // Top Bar
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -78,11 +79,11 @@ fun VolunteerOffersScreen(
         ) {
             Column {
                 Text(text = "Hello, $userName!", style = MaterialTheme.typography.headlineMedium)
-                Text(text = "Have a nice day!", color = Color.Gray)
+                Text(text = "Have a nice day!", style = MaterialTheme.typography.bodyMedium)
             }
             IconButton(onClick = onProfileClick) {
-                Image(
-                    painter = painterResource(id = R.drawable.profile), // Profile icon resource
+                Icon(
+                    painter = painterResource(id = R.drawable.profile),
                     contentDescription = "Profile",
                     modifier = Modifier.size(48.dp)
                 )
@@ -101,32 +102,59 @@ fun VolunteerOffersScreen(
                 items(offers) { offer ->
                     val acceptedVolunteers = offer["acceptedVolunteers"] as? List<String> ?: emptyList()
                     acceptedVolunteers.forEach { volunteerId ->
-                        OfferCard(
-                            offer = offer,
-                            onAccept = {
-                                fetchVolunteerDetails(firestore, volunteerId) { volunteerInfo ->
-                                    selectedVolunteerInfo = volunteerInfo
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(text = offer["volunteerName"] as? String ?: "Unknown Volunteer", fontSize = 16.sp)
+                                Text(
+                                    text = offer["category"] as? String ?: "No Category",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray
+                                )
+                            }
+                            Row {
+                                IconButton(onClick = {
+                                    fetchVolunteerDetails(firestore, volunteerId) { volunteerInfo ->
+                                        selectedVolunteerInfo = volunteerInfo
+                                    }
+                                }) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.accept),
+                                        contentDescription = "Accept",
+                                        modifier = Modifier.size(32.dp)
+                                    )
                                 }
-                            },
-                            onReject = {
-                                val requestId = offer["id"] as? String
-                                if (requestId != null) {
-                                    firestore.collection("help_requests").document(requestId)
-                                        .update("acceptedVolunteers", FieldValue.arrayRemove(volunteerId))
-                                        .addOnSuccessListener {
-                                            offers = offers.filterNot { it["id"] == requestId }
-                                        }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                IconButton(onClick = {
+                                    val requestId = offer["id"] as? String
+                                    if (requestId != null) {
+                                        firestore.collection("help_requests").document(requestId)
+                                            .update("acceptedVolunteers", FieldValue.arrayRemove(volunteerId))
+                                            .addOnSuccessListener {
+                                                offers = offers.filterNot { it["id"] == requestId }
+                                            }
+                                    }
+                                }) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.reject),
+                                        contentDescription = "Reject",
+                                        modifier = Modifier.size(32.dp)
+                                    )
                                 }
-                            },
-                            onDetails = { /* Optional: Show detailed info */ }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Image(
+                            painter = painterResource(id = R.drawable.line_8),
+                            contentDescription = "Separator Line",
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Image(
-                        painter = painterResource(id = R.drawable.line_8),
-                        contentDescription = "Separator Line",
-                        modifier = Modifier.fillMaxWidth()
-                    )
                 }
             }
         }
