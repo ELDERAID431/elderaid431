@@ -17,6 +17,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
+import androidx.compose.ui.graphics.Color
 import java.util.*
 
 @Composable
@@ -204,12 +205,12 @@ fun VolunteerMainScreen(
         // SOS Button
         Button(
             onClick = onSOSClick,
+            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                .size(80.dp)
+                .align(Alignment.CenterHorizontally)
         ) {
-            Text(text = "SOS", fontSize = 16.sp, color = MaterialTheme.colorScheme.onError)
+            Text("SOS", fontSize = 16.sp, color = Color.Black)
         }
 
         // Task Details Dialog
@@ -237,6 +238,7 @@ fun VolunteerMainScreen(
         }
     }
 }
+
 
 // Function to accept a task
 fun acceptTask(
