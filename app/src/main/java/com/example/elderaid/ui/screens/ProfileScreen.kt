@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -35,8 +36,6 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.json.JSONObject
 import java.io.InputStream
-import androidx.compose.foundation.clickable
-
 
 @Composable
 fun ProfileScreen(
@@ -153,14 +152,6 @@ fun ProfileScreen(
                     )
                 }
 
-                // Change Picture Text
-                Spacer(modifier = Modifier.height(8.dp))
-                Image(
-                    painter = painterResource(id = R.drawable.change),
-                    contentDescription = "Change Picture",
-                    modifier = Modifier.clickable { launcher.launch("image/*") }
-                )
-
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Input Fields
@@ -171,34 +162,7 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Update Button
-                Image(
-                    painter = painterResource(id = R.drawable.update_button),
-                    contentDescription = "Update Button",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            val userId = auth.currentUser?.uid
-                            if (userId != null) {
-                                val updates = mapOf(
-                                    "fullName" to fullName,
-                                    "email" to email,
-                                    "phoneNumber" to phoneNumber
-                                )
-                                firestore.collection("users").document(userId)
-                                    .update(updates)
-                                    .addOnSuccessListener {
-                                        successMessage = "Profile updated successfully"
-                                    }
-                                    .addOnFailureListener { exception ->
-                                        errorMessage = exception.localizedMessage ?: "Error updating profile"
-                                    }
-                            }
-                        }
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
+                // Success/Error Messages
                 successMessage?.let {
                     Text(it, color = Color.Green)
                 }
@@ -207,28 +171,52 @@ fun ProfileScreen(
                     Text(it, color = MaterialTheme.colorScheme.error)
                 }
 
-                // Navigation Buttons
                 Spacer(modifier = Modifier.height(32.dp))
+
+                // Navigation Buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+                    // Back Button
                     Image(
                         painter = painterResource(id = R.drawable.geri),
                         contentDescription = "Back Button",
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clickable { onBack() }
                     )
+
+                    // Save Button
                     Image(
                         painter = painterResource(id = R.drawable.ileri),
-                        contentDescription = "Forward Button",
-                        modifier = Modifier.size(48.dp)
+                        contentDescription = "Save Changes",
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clickable {
+                                val userId = auth.currentUser?.uid
+                                if (userId != null) {
+                                    val updates = mapOf(
+                                        "fullName" to fullName,
+                                        "email" to email,
+                                        "phoneNumber" to phoneNumber
+                                    )
+                                    firestore.collection("users").document(userId)
+                                        .update(updates)
+                                        .addOnSuccessListener {
+                                            successMessage = "Profile updated successfully"
+                                        }
+                                        .addOnFailureListener { exception ->
+                                            errorMessage = exception.localizedMessage ?: "Error updating profile"
+                                        }
+                                }
+                            }
                     )
                 }
             }
         }
     }
 }
-
 
 @Composable
 fun ProfileTextField(
