@@ -9,22 +9,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.elderaid.R
 import com.example.elderaid.ui.components.HelpRequestCard
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.*
+
+val balooDa = FontFamily(Font(R.font.baloo_da))
+val balooPaaji2 = FontFamily(Font(R.font.baloo_paaji2))
 
 @Composable
 fun VolunteerMainScreen(
     onTaskClick: (Map<String, Any>) -> Unit,
     onProfileClick: () -> Unit,
     onSOSClick: () -> Unit
-
 ) {
     val auth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
@@ -33,7 +36,22 @@ fun VolunteerMainScreen(
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var requestSentMessage by remember { mutableStateOf<String?>(null) }
-    var selectedTask by remember { mutableStateOf<Map<String, Any>?>(null) } // For showing task details
+    var selectedTask by remember { mutableStateOf<Map<String, Any>?>(null) }
+    var username by remember { mutableStateOf("Volunteer") }
+
+    // Fetch the logged-in user's display name dynamically
+    LaunchedEffect(Unit) {
+        val userId = auth.currentUser?.uid
+        if (userId != null) {
+            firestore.collection("users").document(userId).get()
+                .addOnSuccessListener { document ->
+                    username = document.getString("fullName") ?: "Volunteer"
+                }
+                .addOnFailureListener {
+                    username = "Volunteer"
+                }
+        }
+    }
 
     // Fetch tasks and resolve creator names
     LaunchedEffect(Unit) {
@@ -78,17 +96,35 @@ fun VolunteerMainScreen(
         ) {
             Column {
                 Text(
-                    text = "Hello, ${auth.currentUser?.displayName ?: "Volunteer"}!",
-                    style = MaterialTheme.typography.headlineMedium
+                    text = "Hello, $username!",
+                    style = MaterialTheme.typography.headlineMedium.copy(fontFamily = balooDa),
+                    fontSize = 24.sp
                 )
-                Text(text = "Have a nice day!", color = Color.Gray)
+                Text(
+                    text = "Have a nice day!",
+                    color = Color.Gray,
+                    fontSize = 16.sp
+                )
             }
-            IconButton(onClick = onProfileClick) {
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Icon(
                     painter = painterResource(id = R.drawable.profile),
-                    contentDescription = "Edit Profile",
+                    contentDescription = "Profile Icon",
                     modifier = Modifier.size(48.dp)
                 )
+                Button(
+                    onClick = onProfileClick,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text(
+                        text = "Edit Profile",
+                        fontFamily = balooPaaji2,
+                        fontSize = 16.sp
+                    )
+                }
             }
         }
 
@@ -200,26 +236,22 @@ fun TaskDetailsDialog(task: Map<String, Any>, onDismiss: () -> Unit) {
     )
 }
 
-// Function to accept a task
+// Function to format time
+fun formatTime(timestamp: Long): String {
+    val formatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
+    return formatter.format(Date(timestamp))
+}
+
+// Function to accept task
 fun acceptTask(
     firestore: FirebaseFirestore,
     taskId: String,
     volunteerId: String,
     onSuccess: () -> Unit,
-    onFailure: (Exception) -> Unit
+    onFailure: () -> Unit
 ) {
     val taskRef = firestore.collection("help_requests").document(taskId)
-    taskRef.update("acceptedVolunteers", FieldValue.arrayUnion(volunteerId))
-        .addOnSuccessListener {
-            onSuccess()
-        }
-        .addOnFailureListener { exception ->
-            onFailure(exception)
-        }
-}
-
-// Function to format time
-fun formatTime(timestamp: Long): String {
-    val formatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
-    return formatter.format(Date(timestamp))
+    taskRef.update("volunteerId", volunteerId)
+        .addOnSuccessListener { onSuccess() }
+        .addOnFailureListener { onFailure() }
 }
