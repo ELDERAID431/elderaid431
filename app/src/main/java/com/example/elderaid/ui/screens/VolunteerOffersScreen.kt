@@ -36,14 +36,14 @@ fun VolunteerOffersScreen(
     var selectedVolunteerInfo by remember { mutableStateOf<Map<String, String>?>(null) }
     val currentUserId = auth.currentUser?.uid
 
-    // Fetch offers with accepted volunteers
+    // Fetch offers with accepted volunteers and resolve volunteer names
     LaunchedEffect(Unit) {
         if (currentUserId != null) {
             firestore.collection("help_requests")
                 .whereEqualTo("creatorId", currentUserId)
                 .get()
                 .addOnSuccessListener { querySnapshot ->
-                    offers = querySnapshot.documents.mapNotNull { doc ->
+                    val fetchedOffers = querySnapshot.documents.mapNotNull { doc ->
                         val data = doc.data
                         val acceptedVolunteers = data?.get("acceptedVolunteers") as? List<String>
                         if (!acceptedVolunteers.isNullOrEmpty()) {
@@ -51,6 +51,21 @@ fun VolunteerOffersScreen(
                             data
                         } else null
                     }
+
+                    fetchedOffers.forEach { offer ->
+                        val acceptedVolunteers = offer["acceptedVolunteers"] as? List<String>
+                        if (!acceptedVolunteers.isNullOrEmpty()) {
+                            val volunteerId = acceptedVolunteers.first()
+                            firestore.collection("users").document(volunteerId).get()
+                                .addOnSuccessListener { volunteerDoc ->
+                                    val volunteerName = volunteerDoc.getString("fullName") ?: "Unknown Volunteer"
+                                    offer["volunteerName"] = volunteerName
+                                    offers = offers.map { o -> if (o["id"] == offer["id"]) offer else o }
+                                }
+                        }
+                    }
+
+                    offers = fetchedOffers
                     isLoading = false
                 }
                 .addOnFailureListener { exception ->
@@ -110,7 +125,10 @@ fun VolunteerOffersScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(text = offer["volunteerName"] as? String ?: "Unknown Volunteer", fontSize = 16.sp)
+                                Text(
+                                    text = offer["volunteerName"] as? String ?: "Unknown Volunteer",
+                                    fontSize = 16.sp
+                                )
                                 Text(
                                     text = offer["category"] as? String ?: "No Category",
                                     fontSize = 14.sp,
