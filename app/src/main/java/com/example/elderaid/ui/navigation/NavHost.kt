@@ -119,8 +119,9 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
         composable("newHelpRequest") {
             NewHelpRequestScreen(
                 onSubmitSuccess = {
-                    navController.navigate("elderMain") {
-                        popUpTo("elderMain") { inclusive = true }
+                    val userName = auth.currentUser?.displayName ?: "User"
+                    navController.navigate("elderMain/$userName") {
+                        popUpTo("elderMain/{userName}") { inclusive = true }
                     }
                 },
                 onCancel = {
