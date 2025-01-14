@@ -16,8 +16,8 @@ import com.example.elderaid.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import java.text.SimpleDateFormat
 import androidx.compose.ui.graphics.Color
+import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
@@ -34,6 +34,22 @@ fun VolunteerMainScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var requestSentMessage by remember { mutableStateOf<String?>(null) }
     var selectedTask by remember { mutableStateOf<Map<String, Any>?>(null) } // For showing task details
+    var userName by remember { mutableStateOf("Volunteer") } // Store the username
+
+    // Fetch the volunteer's username
+    LaunchedEffect(Unit) {
+        val userId = auth.currentUser?.uid
+        if (userId != null) {
+            firestore.collection("users").document(userId)
+                .get()
+                .addOnSuccessListener { document ->
+                    userName = document.getString("fullName") ?: "Volunteer"
+                }
+                .addOnFailureListener {
+                    errorMessage = "Failed to fetch user data: ${it.localizedMessage}"
+                }
+        }
+    }
 
     // Fetch tasks and resolve creator names
     LaunchedEffect(Unit) {
@@ -78,10 +94,13 @@ fun VolunteerMainScreen(
         ) {
             Column {
                 Text(
-                    text = "Hello, ${auth.currentUser?.displayName ?: "Volunteer"}!",
+                    text = "Hello, $userName!",
                     style = MaterialTheme.typography.headlineMedium
                 )
-                Text(text = "Have a nice day!", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
+                Text(
+                    text = "Have a nice day!",
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                )
             }
             IconButton(onClick = onProfileClick) {
                 Icon(
@@ -238,7 +257,6 @@ fun VolunteerMainScreen(
         }
     }
 }
-
 
 // Function to accept a task
 fun acceptTask(
