@@ -100,10 +100,8 @@ fun ProfileScreen(
         }
     }
 
-    // UI Layout
     Box(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
         // Background Image
         Image(
@@ -113,7 +111,6 @@ fun ProfileScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Foreground Content
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -127,17 +124,14 @@ fun ProfileScreen(
             } else {
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Edit Profile Title
-                Image(
-                    painter = painterResource(id = R.drawable.edit),
-                    contentDescription = "Edit Profile",
-                    modifier = Modifier.size(100.dp)
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Profile Picture
-                Box(contentAlignment = Alignment.BottomCenter, modifier = Modifier.size(100.dp)) {
+                // Profile Picture (Clickable to Change)
+                Box(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                        .clickable { launcher.launch("image/*") },
+                    contentAlignment = Alignment.BottomCenter
+                ) {
                     Image(
                         painter = if (photoUrl != null) {
                             rememberAsyncImagePainter(photoUrl)
@@ -147,7 +141,6 @@ fun ProfileScreen(
                         contentDescription = "Profile Picture",
                         modifier = Modifier
                             .size(100.dp)
-                            .clip(CircleShape)
                             .background(Color.Gray)
                     )
                 }
